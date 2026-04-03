@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Don Fry Scaffold Estimator</title>
+    <style>
+        body {
+            font-family: Arial;
+            background: #f4f4f4;
+            padding: 40px;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            max-width: 600px;
+            margin: auto;
+            border-radius: 10px;
+        }
+        h1 {
+            text-align: center;
+        }
+        textarea, select, input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        button {
+            width: 100%;
+            padding: 15px;
+            background: black;
+            color: white;
+            font-size: 16px;
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
+    <h1>Don Fry Scaffold Quote Tool</h1>
+
+    <label>Job Description</label>
+    <textarea id="job"></textarea>
+
+    <label>Rental</label>
+    <input type="text" value="Min 28 day Rental" disabled>
+
+    <label>Include Labour?</label>
+    <select id="labour">
+        <option value="yes">Yes</option>
+        <option value="no">No</option>
+    </select>
+
+    <label>Include Engineering?</label>
+    <select id="engineering">
+        <option value="yes">Yes</option>
+        <option value="no">No</option>
+    </select>
+
+    <label>Terms</label>
+    <select id="terms">
+        <option value="standard">Standard Terms</option>
+    </select>
+
+    <button onclick="generateQuote()">Generate Quote</button>
+</div>
+
+<script>
+async function generateQuote() {
+    const data = {
+        job: document.getElementById("job").value,
+        labour: document.getElementById("labour").value,
+        engineering: document.getElementById("engineering").value,
+        terms: document.getElementById("terms").value
+    };
+
+    const response = await fetch("https://donfry-estimator.onrender.com/generate", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(data)
+    });
+
+    alert("Quote Generated (next step will download/email PDF)");
+}
+</script>
+
+</body>
+</html>
