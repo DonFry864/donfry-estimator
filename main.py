@@ -20,7 +20,7 @@ def calculate_base_unit_rental(components):
     total = 0
 
     for c in components:
-        total += c["qty"] * c["rate"]
+        total += c["qty", 0] * c["rate", 0]
 
     return total
 
