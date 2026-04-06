@@ -29,6 +29,7 @@ app = FastAPI()
 class Input(BaseModel):
     length: float
     height: float
+    g3: float = 1.10
     base_outs: int
     ladder_bays: int
     guard_ends: int
