@@ -1,3 +1,8 @@
+from fastapi import FastAPI
+from math import ceil
+
+app = FastAPI()
+
 @app.post("/calculate")
 def calculate(data: Input):
 
