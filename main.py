@@ -2,6 +2,20 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from math import ceil
 
+# --- BASE UNIT COMPONENTS (B8:G18) ---
+BASE_UNIT_COMPONENTS = [
+    {"name": "VM STANDARDS", "qty": 4, "rate": 2.38},
+    {"name": "PFM7", "qty": 3, "rate": 9},
+    {"name": "SL7", "qty": 4, "rate": 3.79},
+    {"name": "SBB7", "qty": 0.5, "rate": 5.03},
+    {"name": "GL", "qty": 1.32, "rate": 0.25},
+    {"name": "SBB 1.15", "qty": 0.125, "rate": 1.25},
+    {"name": "1.15 SL", "qty": 1, "rate": 3.01},
+    {"name": "SBKTS 24", "qty": 0},
+    {"name": "EPP7", "qty": 1, "rate": 7},
+    {"name": "MONARFLEX", "qty": 0, "rate": 0.5},  # dynamic later
+]
+
 app = FastAPI()
 
 class Input(BaseModel):
