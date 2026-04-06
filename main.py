@@ -1,7 +1,16 @@
 from fastapi import FastAPI
+from pydantic import BaseModel
 from math import ceil
 
 app = FastAPI()
+
+class Input(BaseModel):
+    length: float
+    height: float
+    base_outs: int
+    ladder_bays: int
+    guard_ends: int
+    tarp: int
 
 @app.post("/calculate")
 def calculate(data: Input):
