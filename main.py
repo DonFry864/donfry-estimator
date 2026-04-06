@@ -36,8 +36,8 @@ base_units_result = {}
 
 for item, qty in base_unit_table.items():
     base_units_result[item] = qty * square_units
-
-   return {
+  
+    return {
     "drivers": {
         "square_units": square_units,
         "vertical_units": vertical_units,
