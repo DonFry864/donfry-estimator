@@ -11,7 +11,7 @@ BASE_UNIT_COMPONENTS = [
     {"name": "GL", "qty": 1.32, "rate": 0.25},
     {"name": "SBB 1.15", "qty": 0.125, "rate": 1.25},
     {"name": "1.15 SL", "qty": 1, "rate": 3.01},
-    {"name": "SBKTS 24", "qty": 0},
+    {"name": "SBKTS 24", "qty": 0, "rate": 0},
     {"name": "EPP7", "qty": 1, "rate": 7},
     {"name": "MONARFLEX", "qty": 0, "rate": 0.5},  # dynamic later
 ]
