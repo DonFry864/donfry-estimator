@@ -40,21 +40,12 @@ def calculate(data: Input):
     square_units = ceil((data.length * data.height) / 45.5)
     vertical_units = ceil(data.height / 6.5)
     linear_units = ceil(data.length / 7)
+
     F15 = calculate_base_unit_rental(BASE_UNIT_COMPONENTS)
 
-    base_unit_table = {
-        "standards": 4,
-        "ledgers": 6,
-        "transoms": 3,
-        "boards": 5
+    return {
+        "F15": F15,
+        "square_units": square_units,
+        "vertical_units": vertical_units,
+        "linear_units": linear_units
     }
-
-    base_units_result = {}
-
-    for item, qty in base_unit_table.items():
-        base_units_result[item] = qty * square_units
-
-return {
-    "F15": F15
-}
-
