@@ -15,6 +15,14 @@ BASE_UNIT_COMPONENTS = [
     {"name": "EPP7", "qty": 1, "rate": 7},
     {"name": "MONARFLEX", "qty": 0, "rate": 0.5},  # dynamic later
 ]
+# --- CALCULATE BASE UNIT RENTAL (F15) ---
+def calculate_base_unit_rental(components):
+    total = 0
+
+    for c in components:
+        total += c["qty"] * c["rate"]
+
+    return total
 
 app = FastAPI()
 
