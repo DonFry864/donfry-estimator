@@ -48,7 +48,7 @@ def calculate(data: Input):
     F15 = calculate_base_unit_labour(BASE_UNIT_COMPONENTS, data.g3)
 
     return {
-        "base_unit_value": F15
+        "base_unit_value": F15,
         "square_units": square_units,
         "vertical_units": vertical_units,
         "linear_units": linear_units
