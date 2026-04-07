@@ -45,7 +45,7 @@ def calculate(data: Input):
     vertical_units = ceil(data.height / 6.5)
     linear_units = ceil(data.length / 7)
 
-    F15 = calculate_base_unit_rental(BASE_UNIT_COMPONENTS)
+    F15 = calculate_base_unit_rental(BASE_UNIT_COMPONENTS. data.g3)
 
     return {
         "F15": F15,
