@@ -45,7 +45,7 @@ def calculate(data: Input):
     vertical_units = ceil(data.height / 6.5)
     linear_units = ceil(data.length / 7)
 
-    F15 = calculate_base_unit_labour(BASE_UNIT_COMPONENTS. data.g3)
+    F15 = calculate_base_unit_labour(BASE_UNIT_COMPONENTS, data.g3)
 
     return {
         "base_unit_value": F15
