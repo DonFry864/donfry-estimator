@@ -71,6 +71,7 @@ def build_equipment_list(combined_eq: dict[str, float]) -> list[dict]:
 # -------------------------
 def base_unit_equipment(length: float, height: float, tarp: int) -> dict[str, float]:
     base_units = (length * height) / 45.5
+
     return {
         "3M STANDARDS": 4 * base_units / 3,
         "PFM7": 2 * base_units,
@@ -84,19 +85,27 @@ def base_unit_equipment(length: float, height: float, tarp: int) -> dict[str, fl
     }
 
 
-def base_unit_labour(length: float, height: float, tarp: int, g3: float) -> float:
-    f15 = (
-        4 * 2.38 +
-        2 * 9.00 +
-        4 * 3.79 +
-        0.5 * 5.03 +
-        1.32 * 0.25 +
-        1 * 7.00 +
-        1 * 3.01 +
-        (45.5 * 0.50 * tarp)
+def base_unit_f15(tarp: int) -> float:
+    return (
+        (4 * 2.38) +
+        (2 * 9.00) +
+        (4 * 3.79) +
+        (0.5 * 5.03) +
+        (1.32 * 0.25) +
+        (1 * 7.00) +
+        (1 * 3.01) +
+        ((45.5 * 0.50) * tarp)
     )
+
+
+def base_unit_g15(tarp: int, g3: float) -> float:
+    f15 = base_unit_f15(tarp)
     g16 = 45.5 * 0.25 * tarp
-    g15 = (f15 * g3) + g16
+    return (f15 * g3) + g16
+
+
+def base_unit_labour(length: float, height: float, tarp: int, g3: float) -> float:
+    g15 = base_unit_g15(tarp, g3)
 
     total = 0.0
     remaining_height = height
@@ -124,27 +133,33 @@ def base_unit_labour(length: float, height: float, tarp: int, g3: float) -> floa
 # -------------------------
 def end_bay_leg_equipment(height: float, end_bay_leg_input: int, tarp: int) -> dict[str, float]:
     driver = (height / 6.5) * end_bay_leg_input
+
     return {
         "3M STANDARDS": 4 * driver / 3,
-        "SBB 1.15": 1 * driver,
-        "1.15 SL": 5 * driver,
+        "SBB7": 1 * driver,
         "GL": 1.32 * driver,
         "EPP 1.15": 2 * driver,
+        "1.15 SL": 5 * driver,
+        "SBB 1.15": 5 * driver,
         "MONARFLEX TARP": 45.5 * tarp * end_bay_leg_input,
     }
 
 
-def end_bay_leg_g84(tarp: int, g3: float) -> float:
-    f84 = (
-        4 * 2.38 +
-        1 * 5.00 +
-        5 * 3.01 +
-        1.32 * 0.25 +
-        2 * 3.50 +
-        1.32 * 0.25
+def end_bay_leg_f84(tarp: int) -> float:
+    return (
+        (4 * 2.38) +             # VM STANDARDS
+        (1 * 5.00) +             # SBB 1.15
+        (5 * 3.01) +             # 1.15 SL
+        (1.32 * 0.25) +          # GL
+        (2 * 3.50) +             # EPP 1.15
+        (1.32 * 0.25) +          # GL again
+        ((45.5 * 0.50) * tarp)   # MONARFLEX TARP
     )
-    g87 = 45.5 * 0.25 * tarp
-    return (f84 * g3) + g87
+
+
+def end_bay_leg_g84(tarp: int, g3: float) -> float:
+    f84 = end_bay_leg_f84(tarp)
+    return f84 * g3
 
 
 def end_bay_leg_labour(height: float, end_bay_leg_input: int, tarp: int, g3: float) -> float:
@@ -203,10 +218,10 @@ def base_out_eb_equipment(base_out_eb_input: int) -> dict[str, float]:
 
 def base_out_eb_labour(base_out_eb_input: int, g3: float) -> float:
     f144 = (
-        1 * 3.01 +
-        1 * 4.00 +
-        2 * 1.40 +
-        2 * 3.00
+        (1 * 3.01) +
+        (1 * 4.00) +
+        (2 * 1.40) +
+        (2 * 3.00)
     )
     return round(f144 * g3 * base_out_eb_input, 2)
 
@@ -233,16 +248,33 @@ def build_estimate(data: Input) -> dict:
         "inputs": data.model_dump(),
         "equipment_list": build_equipment_list(combined_eq),
         "sections": {
-            "base_unit": {"rental": base_rental, "labour": base_lab},
-            "end_bay_leg": {"rental": ebl_rental, "labour": ebl_lab},
-            "base_out": {"rental": bo_rental, "labour": bo_lab},
-            "base_out_eb": {"rental": boeb_rental, "labour": boeb_lab},
+            "base_unit": {
+                "rental": round(base_rental, 2),
+                "labour": round(base_lab, 2),
+            },
+            "end_bay_leg": {
+                "rental": round(ebl_rental, 2),
+                "labour": round(ebl_lab, 2),
+            },
+            "base_out": {
+                "rental": round(bo_rental, 2),
+                "labour": round(bo_lab, 2),
+            },
+            "base_out_eb": {
+                "rental": round(boeb_rental, 2),
+                "labour": round(boeb_lab, 2),
+            },
         },
         "totals": {
             "rental_28_day": round(base_rental + ebl_rental + bo_rental + boeb_rental, 2),
             "erect_labour": round(base_lab + ebl_lab + bo_lab + boeb_lab, 2),
         },
     }
+
+
+@app.get("/")
+def root():
+    return {"message": "Estimator API is running"}
 
 
 @app.post("/calculate")
