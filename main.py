@@ -4,6 +4,7 @@ from pydantic import BaseModel
 
 app = FastAPI()
 
+
 RENTAL_RATES = {
     "3M STANDARDS": 7.14,
     "SL7": 3.79,
@@ -54,10 +55,10 @@ LABOUR_RATES = {
     "LBB42": 5.00,
     "TRAP DOOR": 10.00,
     "PFM 1.15": 5.00,
-    "DL7": 14.50,
-    "T8 TUBE": 4.00,
-    "T2 TUBE": 1.00,
-    "PK8 8'WOOD PLANK": 4.00,
+    "DL7": 4.00,
+    "T8 TUBE": 0.00,
+    "T2 TUBE": 0.00,
+    "PK8 8'WOOD PLANK": 0.00,
 }
 
 EQUIPMENT_ORDER = [
@@ -96,10 +97,36 @@ class Input(BaseModel):
     base_out_input: int = 0
     base_out_eb_input: int = 0
     access_ladder_input: int = 0
+    ladder_bay_input: int = 0
     top_guard_rail_input: int = 0
     top_guard_rail_ends_input: int = 0
     tie_in_input: int = 0
     top_deck_level_input: int = 0
+
+
+def resolved_access_ladder_input(data: Input) -> int:
+    return data.access_ladder_input if data.access_ladder_input else data.ladder_bay_input
+
+
+def height_engine_total(height: float, cost_per_vertical_ft: float) -> float:
+    total = 0.0
+    remaining_height = height
+    first = True
+
+    while remaining_height >= -45.5:
+        factor = 1.0 if first else 0.7
+        row_value = cost_per_vertical_ft * remaining_height * factor
+
+        if row_value > 0:
+            total += row_value
+
+        if first:
+            remaining_height -= 19.5
+            first = False
+        else:
+            remaining_height -= 6.5
+
+    return round(total, 2)
 
 
 def equipment_rental(equipment: dict[str, float]) -> float:
@@ -214,41 +241,18 @@ def end_bay_leg_equipment(height: float, end_bay_leg_input: int, tarp: int) -> d
     }
 
 
-def end_bay_leg_g84(tarp: int, g3: float) -> float:
+def end_bay_leg_labour(height: float, end_bay_leg_input: int, tarp: int, g3: float) -> float:
     f84 = (
         4 * LABOUR_RATES["3M STANDARDS"] +
         1 * LABOUR_RATES["SBB 1.15"] +
         5 * LABOUR_RATES["1.15 SL"] +
         1.32 * LABOUR_RATES["GL"] +
         2 * LABOUR_RATES["EPP 1.15"] +
-        1.32 * LABOUR_RATES["GL"]
+        45.5 * LABOUR_RATES["MONARFLEX TARP"] * tarp
     )
-    g87 = 45.5 * 0.25 * tarp
-    return (f84 * g3) + g87
-
-
-def end_bay_leg_labour(height: float, end_bay_leg_input: int, tarp: int, g3: float) -> float:
-    g84 = end_bay_leg_g84(tarp, g3)
+    g84 = f84 * g3
     cost_per_vertical_ft = (end_bay_leg_input * g84) / 6.5
-
-    total = 0.0
-    remaining_height = height
-    first = True
-
-    while remaining_height >= -45.5:
-        factor = 1.0 if first else 0.7
-        row_value = cost_per_vertical_ft * remaining_height * factor
-
-        if row_value > 0:
-            total += row_value
-
-        if first:
-            remaining_height -= 19.5
-            first = False
-        else:
-            remaining_height -= 6.5
-
-    return round(total, 2)
+    return height_engine_total(height, cost_per_vertical_ft)
 
 
 # -------------------------
@@ -294,56 +298,31 @@ def base_out_eb_labour(base_out_eb_input: int, g3: float) -> float:
 # -------------------------
 # Access Ladder
 # -------------------------
-def access_ladder_units(height: float, access_ladder_input: int) -> float:
-    return (height / 6.5) * access_ladder_input
-
-
-def access_ladder_equipment(height: float, access_ladder_input: int) -> dict[str, float]:
-    units = access_ladder_units(height, access_ladder_input)
-
+def access_ladder_repeatable_equipment(access_ladder_input: int) -> dict[str, float]:
     return {
-        "AC10": 1 * units,
-        "CTTRA": 2 * units,
-        "LBB42": 1 * units,
-        "TRAP DOOR": 1 * units,
-        "PFM7": -1 * units,
-        "PFM 1.15": 1 * units,
-        "1.15 SL": 1 * units,
+        "AC10": 1 * access_ladder_input,
+        "CTTRA": 2 * access_ladder_input,
+        "LBB42": 1 * access_ladder_input,
+        "TRAP DOOR": 1 * access_ladder_input,
+        "PFM7": -1 * access_ladder_input,
+        "PFM 1.15": 1 * access_ladder_input,
+        "1.15 SL": 1 * access_ladder_input,
     }
 
 
 def access_ladder_labour(height: float, access_ladder_input: int, g3: float) -> float:
-    f_al = (
+    f153 = (
         1 * LABOUR_RATES["AC10"] +
         2 * LABOUR_RATES["CTTRA"] +
         1 * LABOUR_RATES["LBB42"] +
         1 * LABOUR_RATES["TRAP DOOR"] +
-        (-1) * LABOUR_RATES["PFM7"] +
+        (-0.5) * LABOUR_RATES["PFM7"] +
         1 * LABOUR_RATES["PFM 1.15"] +
         1 * LABOUR_RATES["1.15 SL"]
     )
-
-    g_al = f_al * g3
-    cost_per_vertical_ft = (access_ladder_input * g_al) / 6.5
-
-    total = 0.0
-    remaining_height = height
-    first = True
-
-    while remaining_height >= -45.5:
-        factor = 1.0 if first else 0.7
-        row_value = cost_per_vertical_ft * remaining_height * factor
-
-        if row_value > 0:
-            total += row_value
-
-        if first:
-            remaining_height -= 19.5
-            first = False
-        else:
-            remaining_height -= 6.5
-
-    return round(total, 2)
+    g155 = f153 * g3
+    cost_per_vertical_ft = (access_ladder_input * g155) / 6.5
+    return height_engine_total(height, cost_per_vertical_ft)
 
 
 # -------------------------
@@ -365,32 +344,13 @@ def tie_in_equipment(length: float, height: float, tie_in_input: int) -> dict[st
 
 def tie_in_labour(length: float, height: float, tie_in_input: int, g3: float) -> float:
     locations = tie_in_locations(length, height, tie_in_input)
-
     if height <= 0:
         return 0.0
 
     f_tie = 20.0
     g_tie = f_tie * g3
     cost_per_vertical_ft = (locations * g_tie) / height
-
-    total = 0.0
-    remaining_height = height
-    first = True
-
-    while remaining_height >= -45.5:
-        factor = 1.0 if first else 0.7
-        row_value = cost_per_vertical_ft * remaining_height * factor
-
-        if row_value > 0:
-            total += row_value
-
-        if first:
-            remaining_height -= 19.5
-            first = False
-        else:
-            remaining_height -= 6.5
-
-    return round(total, 2)
+    return height_engine_total(height, cost_per_vertical_ft)
 
 
 # -------------------------
@@ -423,25 +383,7 @@ def top_guard_rail_labour(length: float, height: float, top_guard_rail_input: in
         return 0.0
 
     cost_per_vertical_ft = (bays * g_top_gr) / height
-
-    total = 0.0
-    remaining_height = height
-    first = True
-
-    while remaining_height >= -45.5:
-        factor = 1.0 if first else 0.7
-        row_value = cost_per_vertical_ft * remaining_height * factor
-
-        if row_value > 0:
-            total += row_value
-
-        if first:
-            remaining_height -= 19.5
-            first = False
-        else:
-            remaining_height -= 6.5
-
-    return round(total, 2)
+    return height_engine_total(height, cost_per_vertical_ft)
 
 
 # -------------------------
@@ -477,25 +419,7 @@ def top_guard_rail_ends_labour(height: float, top_guard_rail_ends_input: int, g3
         return 0.0
 
     cost_per_vertical_ft = (units * g_top_gr_ends) / height
-
-    total = 0.0
-    remaining_height = height
-    first = True
-
-    while remaining_height >= -45.5:
-        factor = 1.0 if first else 0.7
-        row_value = cost_per_vertical_ft * remaining_height * factor
-
-        if row_value > 0:
-            total += row_value
-
-        if first:
-            remaining_height -= 19.5
-            first = False
-        else:
-            remaining_height -= 6.5
-
-    return round(total, 2)
+    return height_engine_total(height, cost_per_vertical_ft)
 
 
 # -------------------------
@@ -564,37 +488,44 @@ def tarp_canopy_labour(length: float, height: float, tarp: int, g3: float) -> fl
         return 0.0
 
     cost_per_vertical_ft = g_tarp_ca / height
-
-    total = 0.0
-    remaining_height = height
-    first = True
-
-    while remaining_height >= -45.5:
-        factor = 1.0 if first else 0.7
-        row_value = cost_per_vertical_ft * remaining_height * factor
-
-        if row_value > 0:
-            total += row_value
-
-        if first:
-            remaining_height -= 19.5
-            first = False
-        else:
-            remaining_height -= 6.5
-
-    return round(total, 2)
+    return height_engine_total(height, cost_per_vertical_ft)
 
 
 # -------------------------
 # Tarp & Canopy End Bay
-# Placeholder until fully mapped
 # -------------------------
-def tarp_canopy_end_bay_equipment() -> dict[str, float]:
-    return {}
+def tarp_canopy_end_bay_equipment(tarp: int) -> dict[str, float]:
+    driver = float(tarp)
+
+    return {
+        "3M STANDARDS": (2 / 3) * driver,
+        "DL7": 1 * driver,
+        "SL7": 6 * driver,
+        "SJ 18": 1 * driver,
+        "SBC": 1 * driver,
+        "CTTRA": 2 * driver,
+        "MONARFLEX TARP": 300 * driver,
+        "T8 TUBE": 1 * driver,
+        "T2 TUBE": 2 * driver,
+    }
 
 
-def tarp_canopy_end_bay_labour() -> float:
-    return 0.0
+def tarp_canopy_end_bay_labour(height: float, tarp: int, g3: float) -> float:
+    f_tceb = (
+        2 * LABOUR_RATES["3M STANDARDS"] +
+        1 * LABOUR_RATES["DL7"] +
+        6 * LABOUR_RATES["SL7"] +
+        1 * LABOUR_RATES["SJ 18"] +
+        1 * LABOUR_RATES["SBC"] +
+        1 * LABOUR_RATES["T8 TUBE"] +
+        2 * LABOUR_RATES["CTTRA"] +
+        2 * LABOUR_RATES["T2 TUBE"] +
+        300 * LABOUR_RATES["MONARFLEX TARP"]
+    )
+
+    g_tceb = f_tceb * g3
+    cost_per_vertical_ft = (tarp * g_tceb) / 6.5
+    return height_engine_total(height, cost_per_vertical_ft)
 
 
 # -------------------------
@@ -618,77 +549,78 @@ def horizontal_repeatable_labour() -> float:
 
 def build_estimate(data: Input) -> dict:
     sections = {}
+    ladder_input = resolved_access_ladder_input(data)
 
     base_eq = base_unit_equipment(data.length, data.height, data.tarp)
     sections["base_unit"] = make_section(
         base_eq,
-        base_unit_labour(data.length, data.height, data.tarp, data.g3)
+        base_unit_labour(data.length, data.height, data.tarp, data.g3),
     )
 
     ebl_eq = end_bay_leg_equipment(data.height, data.end_bay_leg_input, data.tarp)
     sections["end_bay_leg"] = make_section(
         ebl_eq,
-        end_bay_leg_labour(data.height, data.end_bay_leg_input, data.tarp, data.g3)
+        end_bay_leg_labour(data.height, data.end_bay_leg_input, data.tarp, data.g3),
     )
 
     bo_eq = base_out_equipment(data.base_out_input)
     sections["base_out"] = make_section(
         bo_eq,
-        base_out_labour(data.length, data.base_out_input)
+        base_out_labour(data.length, data.base_out_input),
     )
 
     boeb_eq = base_out_eb_equipment(data.base_out_eb_input)
     sections["base_out_eb"] = make_section(
         boeb_eq,
-        base_out_eb_labour(data.base_out_eb_input, data.g3)
+        base_out_eb_labour(data.base_out_eb_input, data.g3),
     )
 
-    al_eq = access_ladder_equipment(data.height, data.access_ladder_input)
+    al_eq = access_ladder_repeatable_equipment(ladder_input)
     sections["access_ladder"] = make_section(
         al_eq,
-        access_ladder_labour(data.height, data.access_ladder_input, data.g3)
+        access_ladder_labour(data.height, ladder_input, data.g3),
     )
 
     tie_eq = tie_in_equipment(data.length, data.height, data.tie_in_input)
     sections["tie_in"] = make_section(
         tie_eq,
-        tie_in_labour(data.length, data.height, data.tie_in_input, data.g3)
+        tie_in_labour(data.length, data.height, data.tie_in_input, data.g3),
     )
 
     top_gr_eq = top_guard_rail_equipment(data.length, data.top_guard_rail_input)
     sections["top_guard_rail"] = make_section(
         top_gr_eq,
-        top_guard_rail_labour(data.length, data.height, data.top_guard_rail_input, data.g3)
+        top_guard_rail_labour(data.length, data.height, data.top_guard_rail_input, data.g3),
     )
 
     top_gr_ends_eq = top_guard_rail_ends_equipment(data.top_guard_rail_ends_input)
     sections["top_guard_rail_ends"] = make_section(
         top_gr_ends_eq,
-        top_guard_rail_ends_labour(data.height, data.top_guard_rail_ends_input, data.g3)
+        top_guard_rail_ends_labour(data.height, data.top_guard_rail_ends_input, data.g3),
     )
 
     tarp_ca_eq = tarp_canopy_equipment(data.length, data.height, data.tarp)
     sections["tarp_canopy"] = make_section(
         tarp_ca_eq,
-        tarp_canopy_labour(data.length, data.height, data.tarp, data.g3)
+        tarp_canopy_labour(data.length, data.height, data.tarp, data.g3),
     )
 
-    tceb_eq = tarp_canopy_end_bay_equipment()
+    tceb_eq = tarp_canopy_end_bay_equipment(data.tarp)
     sections["tarp_canopy_end_bay"] = make_section(
         tceb_eq,
-        tarp_canopy_end_bay_labour()
+        tarp_canopy_end_bay_labour(data.height, data.tarp, data.g3),
     )
 
     vr_eq = vertical_repeatable_equipment()
     sections["vertical_repeatable"] = make_section(
         vr_eq,
-        vertical_repeatable_labour()
+        vertical_repeatable_labour(),
     )
 
     hr_eq = horizontal_repeatable_equipment()
     sections["horizontal_repeatable"] = make_section(
         hr_eq,
-        horizontal_repeatable_labour()
+        horizontal_repeatable_labour(),
     )
 
     combined_eq = combine_equipment(*(section["equipment"] for section in sections.values()))
@@ -698,14 +630,15 @@ def build_estimate(data: Input) -> dict:
     total_labour = round(sum(section["labour"] for section in sections.values()), 2)
 
     erect_labour_min_applied = apply_erect_minimum(total_labour)
-
     dismantle_labour_raw = round(total_labour * 0.70, 2)
     dismantle_labour_min_applied = apply_dismantle_minimum(dismantle_labour_raw)
-
     engineering = engineering_fee(data.height)
 
+    response_inputs = data.model_dump()
+    response_inputs["access_ladder_input_resolved"] = ladder_input
+
     return {
-        "inputs": data.model_dump(),
+        "inputs": response_inputs,
         "equipment_list": build_equipment_list(combined_eq),
         "sections": {
             name: {
@@ -725,6 +658,11 @@ def build_estimate(data: Input) -> dict:
             "engineering_fee": engineering,
         },
     }
+
+
+@app.get("/")
+def root():
+    return {"status": "ok"}
 
 
 @app.post("/calculate")
