@@ -292,7 +292,6 @@ def tie_in_labour(length: float, height: float, tie_in_input: int, g3: float) ->
     if height <= 0:
         return 0.0
 
-    # Excel tie-in base before G3
     f_tie = 20.0
     g_tie = f_tie * g3
 
@@ -424,6 +423,66 @@ def top_guard_rail_ends_labour(height: float, top_guard_rail_ends_input: int, g3
 
 
 # -------------------------
+# Tarp & Canopy
+# -------------------------
+def tarp_canopy_runs(length: float, tarp: int) -> float:
+    return (length / 7) * tarp
+
+
+def tarp_canopy_equipment(length: float, tarp: int) -> dict[str, float]:
+    runs = tarp_canopy_runs(length, tarp)
+
+    return {
+        "3M STANDARDS": (4 / 3) * runs,
+        "PFM7": 4 * runs,
+        "SL7": 4 * runs,
+        "SBB7": 3 * runs,
+        "CTTRA": 2 * runs,
+        "SBC": 1.4 * runs,
+        "MONARFLEX TARP": 150 * runs,
+    }
+
+
+def tarp_canopy_labour(length: float, height: float, tarp: int, g3: float) -> float:
+    runs = tarp_canopy_runs(length, tarp)
+
+    f_tarp_ca = (
+        4 * 2.38 +
+        4 * LABOUR_RATES["PFM7"] +
+        4 * LABOUR_RATES["SL7"] +
+        3 * LABOUR_RATES["SBB7"] +
+        2 * LABOUR_RATES["CTTRA"] +
+        1.4 * LABOUR_RATES["SBC"] +
+        150 * LABOUR_RATES["MONARFLEX TARP"]
+    )
+    g_tarp_ca = f_tarp_ca * g3
+
+    if height <= 0:
+        return 0.0
+
+    cost_per_vertical_ft = (runs * g_tarp_ca) / height
+
+    total = 0.0
+    remaining_height = height
+    first = True
+
+    while remaining_height >= -45.5:
+        factor = 1.0 if first else 0.7
+        row_value = cost_per_vertical_ft * remaining_height * factor
+
+        if row_value > 0:
+            total += row_value
+
+        if first:
+            remaining_height -= 19.5
+            first = False
+        else:
+            remaining_height -= 6.5
+
+    return round(total, 2)
+
+
+# -------------------------
 # Future Repeatable Units
 # -------------------------
 def vertical_repeatable_equipment() -> dict[str, float]:
@@ -485,6 +544,12 @@ def build_estimate(data: Input) -> dict:
     sections["top_guard_rail_ends"] = make_section(
         top_gr_ends_eq,
         top_guard_rail_ends_labour(data.height, data.top_guard_rail_ends_input, data.g3)
+    )
+
+    tarp_ca_eq = tarp_canopy_equipment(data.length, data.tarp)
+    sections["tarp_canopy"] = make_section(
+        tarp_ca_eq,
+        tarp_canopy_labour(data.length, data.height, data.tarp, data.g3)
     )
 
     vr_eq = vertical_repeatable_equipment()
