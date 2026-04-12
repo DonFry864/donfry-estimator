@@ -42,9 +42,14 @@ class Input(BaseModel):
     height: float
     g3: float = 1.10
     tarp: int = 0
-    end_bay_leg_input: int = 0   # X6
-    base_out_input: int = 0      # X7
-    base_out_eb_input: int = 0   # X8
+    end_bay_leg_input: int = 0
+    base_out_input: int = 0
+    base_out_eb_input: int = 0
+    ladder_bay_input: int = 0
+    top_guard_rail_input: int = 0
+    top_guard_rail_ends_input: int = 0
+    tie_in_input: int = 0
+    top_deck_level_input: int = 0
 
 
 def equipment_rental(equipment: dict[str, float]) -> float:
