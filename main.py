@@ -319,16 +319,15 @@ def tie_in_labour(length: float, height: float, tie_in_input: int, g3: float) ->
 # -------------------------
 # Top Guard Rail
 # -------------------------
-def top_guard_rail_bays(length: float, top_guard_rail_input: int) -> float:
-    return (length / 7) * top_guard_rail_input
-
-
 def top_guard_rail_equipment(length: float, top_guard_rail_input: int) -> dict[str, float]:
-    bays = top_guard_rail_bays(length, top_guard_rail_input)
+    runs = length / 7
+    driver = runs * top_guard_rail_input
 
     return {
-        "3M STANDARDS": bays / 3,
-        "GL": bays * 0.33,
+        "3M STANDARDS": 1 * driver,
+        "SL7": 2 * driver,
+        "EPP7": 1 * driver,
+        "GL": 0.33 * driver,
     }
 
 
