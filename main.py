@@ -332,8 +332,7 @@ def top_guard_rail_equipment(length: float, top_guard_rail_input: int) -> dict[s
 
 
 def top_guard_rail_labour(length: float, height: float, top_guard_rail_input: int, g3: float) -> float:
-    bays = top_guard_rail_bays(length, top_guard_rail_input)
-
+    bays = (length / 7) * top_guard_rail_input
     f_top_gr = (
         1 * LABOUR_RATES["3M STANDARDS"] +
         2 * LABOUR_RATES["SL7"] +
@@ -348,7 +347,7 @@ def top_guard_rail_labour(length: float, height: float, top_guard_rail_input: in
 
     while remaining_height >= -45.5:
         factor = 1.0 if first else 0.7
-        row_value = (bays / 7) * g_top_gr * remaining_height * factor
+        row_value = bays * g_top_gr * remaining_height * factor
 
         if row_value > 0:
             total += row_value
