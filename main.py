@@ -273,7 +273,8 @@ def base_out_eb_labour(base_out_eb_input: int, g3: float) -> float:
 # Tie In
 # -------------------------
 def tie_in_locations(length: float, height: float, tie_in_input: int) -> float:
-    return ((length * height) / 91 + (height / 13)) * tie_in_input
+    base_units = (length * height) / 45.5
+    return ((base_units / 2) + (height / 13)) * tie_in_input
 
 
 def tie_in_equipment(length: float, height: float, tie_in_input: int) -> dict[str, float]:
@@ -288,12 +289,14 @@ def tie_in_equipment(length: float, height: float, tie_in_input: int) -> dict[st
 def tie_in_labour(length: float, height: float, tie_in_input: int, g3: float) -> float:
     locations = tie_in_locations(length, height, tie_in_input)
 
-    f_tie = (
-        2 * LABOUR_RATES["CTTRA"] +
-        1 * LABOUR_RATES["SL7"] +
-        1 * LABOUR_RATES["EYE BOLT"]
-    )
+    if height <= 0:
+        return 0.0
+
+    # Excel tie-in base before G3
+    f_tie = 20.0
     g_tie = f_tie * g3
+
+    cost_per_vertical_ft = (locations * g_tie) / height
 
     total = 0.0
     remaining_height = height
@@ -301,7 +304,7 @@ def tie_in_labour(length: float, height: float, tie_in_input: int, g3: float) ->
 
     while remaining_height >= -45.5:
         factor = 1.0 if first else 0.7
-        row_value = locations * g_tie * factor
+        row_value = cost_per_vertical_ft * remaining_height * factor
 
         if row_value > 0:
             total += row_value
@@ -382,6 +385,7 @@ def top_guard_rail_ends_equipment(top_guard_rail_ends_input: int) -> dict[str, f
         "EPP 1.15": 2 * units,
         "GL": 1 * units,
     }
+
 
 def top_guard_rail_ends_labour(height: float, top_guard_rail_ends_input: int, g3: float) -> float:
     units = top_guard_rail_ends_units(top_guard_rail_ends_input)
