@@ -324,15 +324,15 @@ def top_guard_rail_equipment(length: float, top_guard_rail_input: int) -> dict[s
     driver = runs * top_guard_rail_input
 
     return {
-        "3M STANDARDS": 1 * driver,
+        "3M STANDARDS": driver / 3,
         "SL7": 2 * driver,
         "EPP7": 1 * driver,
         "GL": 0.33 * driver,
     }
 
-
 def top_guard_rail_labour(length: float, height: float, top_guard_rail_input: int, g3: float) -> float:
     bays = (length / 7) * top_guard_rail_input
+
     f_top_gr = (
         1 * LABOUR_RATES["3M STANDARDS"] +
         2 * LABOUR_RATES["SL7"] +
@@ -341,13 +341,18 @@ def top_guard_rail_labour(length: float, height: float, top_guard_rail_input: in
     )
     g_top_gr = f_top_gr * g3
 
+    if height <= 0:
+        return 0.0
+
+    cost_per_vertical_ft = (bays * g_top_gr) / height
+
     total = 0.0
     remaining_height = height
     first = True
 
     while remaining_height >= -45.5:
         factor = 1.0 if first else 0.7
-        row_value = bays * g_top_gr * remaining_height * factor
+        row_value = cost_per_vertical_ft * remaining_height * factor
 
         if row_value > 0:
             total += row_value
@@ -359,8 +364,6 @@ def top_guard_rail_labour(length: float, height: float, top_guard_rail_input: in
             remaining_height -= 6.5
 
     return round(total, 2)
-
-
 # -------------------------
 # Future Repeatable Units
 # -------------------------
