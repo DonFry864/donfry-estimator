@@ -293,7 +293,6 @@ def tie_in_labour(length: float, height: float, tie_in_input: int, g3: float) ->
         1 * LABOUR_RATES["SL7"] +
         1 * LABOUR_RATES["EYE BOLT"]
     )
-
     g_tie = f_tie * g3
 
     total = 0.0
@@ -330,6 +329,7 @@ def top_guard_rail_equipment(length: float, top_guard_rail_input: int) -> dict[s
         "GL": 0.33 * driver,
     }
 
+
 def top_guard_rail_labour(length: float, height: float, top_guard_rail_input: int, g3: float) -> float:
     bays = (length / 7) * top_guard_rail_input
 
@@ -364,6 +364,62 @@ def top_guard_rail_labour(length: float, height: float, top_guard_rail_input: in
             remaining_height -= 6.5
 
     return round(total, 2)
+
+
+# -------------------------
+# Top Guard Rail Ends
+# -------------------------
+def top_guard_rail_ends_units(top_guard_rail_ends_input: int) -> float:
+    return float(top_guard_rail_ends_input)
+
+
+def top_guard_rail_ends_equipment(top_guard_rail_ends_input: int) -> dict[str, float]:
+    units = top_guard_rail_ends_units(top_guard_rail_ends_input)
+
+    return {
+        "3M STANDARDS": 3 * units,
+        "1.15 SL": 4 * units,
+        "EPP 1.15": 2 * units,
+        "GL": 1 * units,
+    }
+
+
+def top_guard_rail_ends_labour(height: float, top_guard_rail_ends_input: int, g3: float) -> float:
+    units = top_guard_rail_ends_units(top_guard_rail_ends_input)
+
+    f_top_gr_ends = (
+        3 * LABOUR_RATES["3M STANDARDS"] +
+        4 * LABOUR_RATES["1.15 SL"] +
+        2 * LABOUR_RATES["EPP 1.15"] +
+        1 * LABOUR_RATES["GL"]
+    )
+    g_top_gr_ends = f_top_gr_ends * g3
+
+    if height <= 0:
+        return 0.0
+
+    cost_per_vertical_ft = (units * g_top_gr_ends) / height
+
+    total = 0.0
+    remaining_height = height
+    first = True
+
+    while remaining_height >= -45.5:
+        factor = 1.0 if first else 0.7
+        row_value = cost_per_vertical_ft * remaining_height * factor
+
+        if row_value > 0:
+            total += row_value
+
+        if first:
+            remaining_height -= 19.5
+            first = False
+        else:
+            remaining_height -= 6.5
+
+    return round(total, 2)
+
+
 # -------------------------
 # Future Repeatable Units
 # -------------------------
@@ -420,6 +476,12 @@ def build_estimate(data: Input) -> dict:
     sections["top_guard_rail"] = make_section(
         top_gr_eq,
         top_guard_rail_labour(data.length, data.height, data.top_guard_rail_input, data.g3)
+    )
+
+    top_gr_ends_eq = top_guard_rail_ends_equipment(data.top_guard_rail_ends_input)
+    sections["top_guard_rail_ends"] = make_section(
+        top_gr_ends_eq,
+        top_guard_rail_ends_labour(data.height, data.top_guard_rail_ends_input, data.g3)
     )
 
     vr_eq = vertical_repeatable_equipment()
