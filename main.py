@@ -4,7 +4,7 @@ from pydantic import BaseModel
 
 app = FastAPI()
 
-RATES = {
+RENTAL_RATES = {
     "3M STANDARDS": 7.14,
     "SL7": 3.79,
     "PFM7": 9.00,
@@ -18,6 +18,11 @@ RATES = {
     "SBC": 1.40,
     "SJ 18": 3.00,
     "MONARFLEX TARP": 0.50,
+    "CTTRA": 2.00,
+}
+
+CONSUMABLE_RATES = {
+    "EYE BOLT": 7.00,
 }
 
 EQUIPMENT_ORDER = [
@@ -34,6 +39,8 @@ EQUIPMENT_ORDER = [
     "SBC",
     "SJ 18",
     "MONARFLEX TARP",
+    "CTTRA",
+    "EYE BOLT",
 ]
 
 
@@ -53,7 +60,11 @@ class Input(BaseModel):
 
 
 def equipment_rental(equipment: dict[str, float]) -> float:
-    return round(sum(qty * RATES.get(name, 0.0) for name, qty in equipment.items()), 2)
+    return round(sum(qty * RENTAL_RATES.get(name, 0.0) for name, qty in equipment.items()), 2)
+
+
+def equipment_consumables(equipment: dict[str, float]) -> float:
+    return round(sum(qty * CONSUMABLE_RATES.get(name, 0.0) for name, qty in equipment.items()), 2)
 
 
 def combine_equipment(*sections: dict[str, float]) -> dict[str, float]:
@@ -71,12 +82,20 @@ def build_equipment_list(combined_eq: dict[str, float]) -> list[dict]:
     ]
 
 
+def make_section(equipment: dict[str, float], labour: float) -> dict:
+    return {
+        "equipment": equipment,
+        "rental": equipment_rental(equipment),
+        "consumables": equipment_consumables(equipment),
+        "labour": round(labour, 2),
+    }
+
+
 # -------------------------
 # Base Unit
 # -------------------------
 def base_unit_equipment(length: float, height: float, tarp: int) -> dict[str, float]:
     base_units = (length * height) / 45.5
-
     return {
         "3M STANDARDS": 4 * base_units / 3,
         "PFM7": 2 * base_units,
@@ -90,27 +109,19 @@ def base_unit_equipment(length: float, height: float, tarp: int) -> dict[str, fl
     }
 
 
-def base_unit_f15(tarp: int) -> float:
-    return (
-        (4 * 2.38) +
-        (2 * 9.00) +
-        (4 * 3.79) +
-        (0.5 * 5.03) +
-        (1.32 * 0.25) +
-        (1 * 7.00) +
-        (1 * 3.01) +
-        ((45.5 * 0.50) * tarp)
-    )
-
-
-def base_unit_g15(tarp: int, g3: float) -> float:
-    f15 = base_unit_f15(tarp)
-    g16 = 45.5 * 0.25 * tarp
-    return (f15 * g3) + g16
-
-
 def base_unit_labour(length: float, height: float, tarp: int, g3: float) -> float:
-    g15 = base_unit_g15(tarp, g3)
+    f15 = (
+        4 * 2.38 +
+        2 * 9.00 +
+        4 * 3.79 +
+        0.5 * 5.03 +
+        1.32 * 0.25 +
+        1 * 7.00 +
+        1 * 3.01 +
+        (45.5 * 0.50 * tarp)
+    )
+    g16 = 45.5 * 0.25 * tarp
+    g15 = (f15 * g3) + g16
 
     total = 0.0
     remaining_height = height
@@ -138,33 +149,27 @@ def base_unit_labour(length: float, height: float, tarp: int, g3: float) -> floa
 # -------------------------
 def end_bay_leg_equipment(height: float, end_bay_leg_input: int, tarp: int) -> dict[str, float]:
     driver = (height / 6.5) * end_bay_leg_input
-
     return {
         "3M STANDARDS": 4 * driver / 3,
-        "SBB7": 1 * driver,
+        "SBB 1.15": 1 * driver,
+        "1.15 SL": 5 * driver,
         "GL": 1.32 * driver,
         "EPP 1.15": 2 * driver,
-        "1.15 SL": 5 * driver,
-        "SBB 1.15": 5 * driver,
         "MONARFLEX TARP": 45.5 * tarp * end_bay_leg_input,
     }
 
 
-def end_bay_leg_f84(tarp: int) -> float:
-    return (
-        (4 * 2.38) +             # VM STANDARDS
-        (1 * 5.00) +             # SBB 1.15
-        (5 * 3.01) +             # 1.15 SL
-        (1.32 * 0.25) +          # GL
-        (2 * 3.50) +             # EPP 1.15
-        (1.32 * 0.25) +          # GL again
-        ((45.5 * 0.50) * tarp)   # MONARFLEX TARP
-    )
-
-
 def end_bay_leg_g84(tarp: int, g3: float) -> float:
-    f84 = end_bay_leg_f84(tarp)
-    return f84 * g3
+    f84 = (
+        4 * 2.38 +
+        1 * 5.00 +
+        5 * 3.01 +
+        1.32 * 0.25 +
+        2 * 3.50 +
+        1.32 * 0.25
+    )
+    g87 = 45.5 * 0.25 * tarp
+    return (f84 * g3) + g87
 
 
 def end_bay_leg_labour(height: float, end_bay_leg_input: int, tarp: int, g3: float) -> float:
@@ -223,63 +228,150 @@ def base_out_eb_equipment(base_out_eb_input: int) -> dict[str, float]:
 
 def base_out_eb_labour(base_out_eb_input: int, g3: float) -> float:
     f144 = (
-        (1 * 3.01) +
-        (1 * 4.00) +
-        (2 * 1.40) +
-        (2 * 3.00)
+        1 * 3.01 +
+        1 * 4.00 +
+        2 * 1.40 +
+        2 * 3.00
     )
     return round(f144 * g3 * base_out_eb_input, 2)
 
 
+# -------------------------
+# Tie In
+# -------------------------
+def tie_in_locations(length: float, height: float, tie_in_input: int) -> float:
+    return ((length * height) / 91 + (height / 13)) * tie_in_input
+
+
+def tie_in_equipment(length: float, height: float, tie_in_input: int) -> dict[str, float]:
+    locations = tie_in_locations(length, height, tie_in_input)
+    return {
+        "CTTRA": 2 * locations,
+        "SL7": locations,
+        "EYE BOLT": locations,
+    }
+
+
+def tie_in_labour(length: float, height: float, tie_in_input: int, g3: float) -> float:
+    locations = tie_in_locations(length, height, tie_in_input)
+
+    # Labour-driving items for tie-in installation
+    f_tie = (
+        2 * RENTAL_RATES.get("CTTRA", 0.0) +
+        1 * RENTAL_RATES.get("SL7", 0.0) +
+        1 * CONSUMABLE_RATES.get("EYE BOLT", 0.0)
+    )
+
+    g_tie = f_tie * g3
+
+    total = 0.0
+    remaining_height = height
+    first = True
+
+    while remaining_height >= -45.5:
+        factor = 1.0 if first else 0.7
+        row_value = locations * g_tie * factor
+
+        if row_value > 0:
+            total += row_value
+
+        if first:
+            remaining_height -= 19.5
+            first = False
+        else:
+            remaining_height -= 6.5
+
+    return round(total, 2)
+
+
+# -------------------------
+# Future Repeatable Units
+# -------------------------
+def vertical_repeatable_equipment() -> dict[str, float]:
+    return {}
+
+
+def vertical_repeatable_labour() -> float:
+    return 0.0
+
+
+def horizontal_repeatable_equipment() -> dict[str, float]:
+    return {}
+
+
+def horizontal_repeatable_labour() -> float:
+    return 0.0
+
+
 def build_estimate(data: Input) -> dict:
+    sections = {}
+
     base_eq = base_unit_equipment(data.length, data.height, data.tarp)
+    sections["base_unit"] = make_section(
+        base_eq,
+        base_unit_labour(data.length, data.height, data.tarp, data.g3)
+    )
+
     ebl_eq = end_bay_leg_equipment(data.height, data.end_bay_leg_input, data.tarp)
+    sections["end_bay_leg"] = make_section(
+        ebl_eq,
+        end_bay_leg_labour(data.height, data.end_bay_leg_input, data.tarp, data.g3)
+    )
+
     bo_eq = base_out_equipment(data.base_out_input)
+    sections["base_out"] = make_section(
+        bo_eq,
+        base_out_labour(data.length, data.base_out_input)
+    )
+
     boeb_eq = base_out_eb_equipment(data.base_out_eb_input)
+    sections["base_out_eb"] = make_section(
+        boeb_eq,
+        base_out_eb_labour(data.base_out_eb_input, data.g3)
+    )
 
-    combined_eq = combine_equipment(base_eq, ebl_eq, bo_eq, boeb_eq)
+    tie_eq = tie_in_equipment(data.length, data.height, data.tie_in_input)
+    sections["tie_in"] = make_section(
+        tie_eq,
+        tie_in_labour(data.length, data.height, data.tie_in_input, data.g3)
+    )
 
-    base_rental = equipment_rental(base_eq)
-    ebl_rental = equipment_rental(ebl_eq)
-    bo_rental = equipment_rental(bo_eq)
-    boeb_rental = equipment_rental(boeb_eq)
+    vr_eq = vertical_repeatable_equipment()
+    sections["vertical_repeatable"] = make_section(
+        vr_eq,
+        vertical_repeatable_labour()
+    )
 
-    base_lab = base_unit_labour(data.length, data.height, data.tarp, data.g3)
-    ebl_lab = end_bay_leg_labour(data.height, data.end_bay_leg_input, data.tarp, data.g3)
-    bo_lab = base_out_labour(data.length, data.base_out_input)
-    boeb_lab = base_out_eb_labour(data.base_out_eb_input, data.g3)
+    hr_eq = horizontal_repeatable_equipment()
+    sections["horizontal_repeatable"] = make_section(
+        hr_eq,
+        horizontal_repeatable_labour()
+    )
+
+    combined_eq = combine_equipment(*(section["equipment"] for section in sections.values()))
+
+    total_rental = round(sum(section["rental"] for section in sections.values()), 2)
+    total_consumables = round(sum(section["consumables"] for section in sections.values()), 2)
+    total_labour = round(sum(section["labour"] for section in sections.values()), 2)
 
     return {
         "inputs": data.model_dump(),
         "equipment_list": build_equipment_list(combined_eq),
         "sections": {
-            "base_unit": {
-                "rental": round(base_rental, 2),
-                "labour": round(base_lab, 2),
-            },
-            "end_bay_leg": {
-                "rental": round(ebl_rental, 2),
-                "labour": round(ebl_lab, 2),
-            },
-            "base_out": {
-                "rental": round(bo_rental, 2),
-                "labour": round(bo_lab, 2),
-            },
-            "base_out_eb": {
-                "rental": round(boeb_rental, 2),
-                "labour": round(boeb_lab, 2),
-            },
+            name: {
+                "rental": section["rental"],
+                "consumables": section["consumables"],
+                "labour": section["labour"],
+            }
+            for name, section in sections.items()
         },
         "totals": {
-            "rental_28_day": round(base_rental + ebl_rental + bo_rental + boeb_rental, 2),
-            "erect_labour": round(base_lab + ebl_lab + bo_lab + boeb_lab, 2),
+            "rental_28_day": total_rental,
+            "consumables": total_consumables,
+            "erect_labour": total_labour,
+            "grand_total_initial": round(total_rental + total_consumables + total_labour, 2),
         },
     }
-
-
-@app.get("/")
-def root():
-    return {"message": "Estimator API is running"}
 
 
 @app.post("/calculate")
