@@ -317,6 +317,53 @@ def tie_in_labour(length: float, height: float, tie_in_input: int, g3: float) ->
 
 
 # -------------------------
+# Top Guard Rail
+# -------------------------
+def top_guard_rail_bays(length: float, top_guard_rail_input: int) -> float:
+    return (length / 7) * top_guard_rail_input
+
+
+def top_guard_rail_equipment(length: float, top_guard_rail_input: int) -> dict[str, float]:
+    bays = top_guard_rail_bays(length, top_guard_rail_input)
+
+    return {
+        "3M STANDARDS": bays / 3,
+        "GL": bays * 0.33,
+    }
+
+
+def top_guard_rail_labour(length: float, height: float, top_guard_rail_input: int, g3: float) -> float:
+    bays = top_guard_rail_bays(length, top_guard_rail_input)
+
+    f_top_gr = (
+        1 * LABOUR_RATES["3M STANDARDS"] +
+        2 * LABOUR_RATES["SL7"] +
+        1 * LABOUR_RATES["EPP7"] +
+        0.33 * LABOUR_RATES["GL"]
+    )
+    g_top_gr = f_top_gr * g3
+
+    total = 0.0
+    remaining_height = height
+    first = True
+
+    while remaining_height >= -45.5:
+        factor = 1.0 if first else 0.7
+        row_value = (bays / 7) * g_top_gr * remaining_height * factor
+
+        if row_value > 0:
+            total += row_value
+
+        if first:
+            remaining_height -= 19.5
+            first = False
+        else:
+            remaining_height -= 6.5
+
+    return round(total, 2)
+
+
+# -------------------------
 # Future Repeatable Units
 # -------------------------
 def vertical_repeatable_equipment() -> dict[str, float]:
@@ -368,6 +415,12 @@ def build_estimate(data: Input) -> dict:
         tie_in_labour(data.length, data.height, data.tie_in_input, data.g3)
     )
 
+    top_gr_eq = top_guard_rail_equipment(data.length, data.top_guard_rail_input)
+    sections["top_guard_rail"] = make_section(
+        top_gr_eq,
+        top_guard_rail_labour(data.length, data.height, data.top_guard_rail_input, data.g3)
+    )
+
     vr_eq = vertical_repeatable_equipment()
     sections["vertical_repeatable"] = make_section(
         vr_eq,
@@ -388,9 +441,7 @@ def build_estimate(data: Input) -> dict:
 
     erect_labour_min_applied = apply_erect_minimum(total_labour)
 
-    # Raw dismantle formula is not locked yet.
-    # For now we expose the minimum rule helper but do not force a dismantle total.
-    dismantle_labour_raw = 0.0
+    dismantle_labour_raw = round(total_labour * 0.70, 2)
     dismantle_labour_min_applied = apply_dismantle_minimum(dismantle_labour_raw)
 
     engineering = engineering_fee(data.height)
@@ -411,11 +462,9 @@ def build_estimate(data: Input) -> dict:
             "consumables": total_consumables,
             "erect_labour_raw": total_labour,
             "erect_labour_min_applied": erect_labour_min_applied,
-        },
-        "estimate_rules_preview": {
+            "dismantle_labour_raw": dismantle_labour_raw,
+            "dismantle_labour_min_applied": dismantle_labour_min_applied,
             "engineering_fee": engineering,
-            "dismantle_labour_raw_placeholder": dismantle_labour_raw,
-            "dismantle_labour_min_applied_placeholder": dismantle_labour_min_applied,
         },
     }
 
