@@ -25,6 +25,24 @@ CONSUMABLE_RATES = {
     "EYE BOLT": 7.00,
 }
 
+LABOUR_RATES = {
+    "3M STANDARDS": 2.38,
+    "SL7": 3.79,
+    "PFM7": 9.00,
+    "SBB7": 5.03,
+    "GL": 0.25,
+    "EPP7": 7.00,
+    "EPP 1.15": 3.50,
+    "1.15 SL": 3.01,
+    "SBB 1.15": 5.00,
+    "PK 5 SILL": 4.00,
+    "SBC": 1.40,
+    "SJ 18": 3.00,
+    "MONARFLEX TARP": 0.50,
+    "CTTRA": 2.00,
+    "EYE BOLT": 7.00,
+}
+
 EQUIPMENT_ORDER = [
     "3M STANDARDS",
     "SL7",
@@ -92,6 +110,21 @@ def make_section(equipment: dict[str, float], labour: float) -> dict:
 
 
 # -------------------------
+# Estimate Rules
+# -------------------------
+def apply_erect_minimum(erect_labour: float) -> float:
+    return max(3040.0, erect_labour)
+
+
+def apply_dismantle_minimum(dismantle_labour: float) -> float:
+    return max(2120.0, dismantle_labour)
+
+
+def engineering_fee(height: float) -> float:
+    return 1650.0 if height > 49 else 0.0
+
+
+# -------------------------
 # Base Unit
 # -------------------------
 def base_unit_equipment(length: float, height: float, tarp: int) -> dict[str, float]:
@@ -111,14 +144,14 @@ def base_unit_equipment(length: float, height: float, tarp: int) -> dict[str, fl
 
 def base_unit_labour(length: float, height: float, tarp: int, g3: float) -> float:
     f15 = (
-        4 * 2.38 +
-        2 * 9.00 +
-        4 * 3.79 +
-        0.5 * 5.03 +
-        1.32 * 0.25 +
-        1 * 7.00 +
-        1 * 3.01 +
-        (45.5 * 0.50 * tarp)
+        4 * LABOUR_RATES["3M STANDARDS"] +
+        2 * LABOUR_RATES["PFM7"] +
+        4 * LABOUR_RATES["SL7"] +
+        0.5 * LABOUR_RATES["SBB7"] +
+        1.32 * LABOUR_RATES["GL"] +
+        1 * LABOUR_RATES["EPP7"] +
+        1 * LABOUR_RATES["1.15 SL"] +
+        (45.5 * LABOUR_RATES["MONARFLEX TARP"] * tarp)
     )
     g16 = 45.5 * 0.25 * tarp
     g15 = (f15 * g3) + g16
@@ -161,12 +194,12 @@ def end_bay_leg_equipment(height: float, end_bay_leg_input: int, tarp: int) -> d
 
 def end_bay_leg_g84(tarp: int, g3: float) -> float:
     f84 = (
-        4 * 2.38 +
-        1 * 5.00 +
-        5 * 3.01 +
-        1.32 * 0.25 +
-        2 * 3.50 +
-        1.32 * 0.25
+        4 * LABOUR_RATES["3M STANDARDS"] +
+        1 * LABOUR_RATES["SBB 1.15"] +
+        5 * LABOUR_RATES["1.15 SL"] +
+        1.32 * LABOUR_RATES["GL"] +
+        2 * LABOUR_RATES["EPP 1.15"] +
+        1.32 * LABOUR_RATES["GL"]
     )
     g87 = 45.5 * 0.25 * tarp
     return (f84 * g3) + g87
@@ -228,10 +261,10 @@ def base_out_eb_equipment(base_out_eb_input: int) -> dict[str, float]:
 
 def base_out_eb_labour(base_out_eb_input: int, g3: float) -> float:
     f144 = (
-        1 * 3.01 +
-        1 * 4.00 +
-        2 * 1.40 +
-        2 * 3.00
+        1 * LABOUR_RATES["1.15 SL"] +
+        1 * LABOUR_RATES["PK 5 SILL"] +
+        2 * LABOUR_RATES["SBC"] +
+        2 * LABOUR_RATES["SJ 18"]
     )
     return round(f144 * g3 * base_out_eb_input, 2)
 
@@ -255,11 +288,10 @@ def tie_in_equipment(length: float, height: float, tie_in_input: int) -> dict[st
 def tie_in_labour(length: float, height: float, tie_in_input: int, g3: float) -> float:
     locations = tie_in_locations(length, height, tie_in_input)
 
-    # Labour-driving items for tie-in installation
     f_tie = (
-        2 * RENTAL_RATES.get("CTTRA", 0.0) +
-        1 * RENTAL_RATES.get("SL7", 0.0) +
-        1 * CONSUMABLE_RATES.get("EYE BOLT", 0.0)
+        2 * LABOUR_RATES["CTTRA"] +
+        1 * LABOUR_RATES["SL7"] +
+        1 * LABOUR_RATES["EYE BOLT"]
     )
 
     g_tie = f_tie * g3
@@ -354,6 +386,15 @@ def build_estimate(data: Input) -> dict:
     total_consumables = round(sum(section["consumables"] for section in sections.values()), 2)
     total_labour = round(sum(section["labour"] for section in sections.values()), 2)
 
+    erect_labour_min_applied = apply_erect_minimum(total_labour)
+
+    # Raw dismantle formula is not locked yet.
+    # For now we expose the minimum rule helper but do not force a dismantle total.
+    dismantle_labour_raw = 0.0
+    dismantle_labour_min_applied = apply_dismantle_minimum(dismantle_labour_raw)
+
+    engineering = engineering_fee(data.height)
+
     return {
         "inputs": data.model_dump(),
         "equipment_list": build_equipment_list(combined_eq),
@@ -368,8 +409,13 @@ def build_estimate(data: Input) -> dict:
         "totals": {
             "rental_28_day": total_rental,
             "consumables": total_consumables,
-            "erect_labour": total_labour,
-            "grand_total_initial": round(total_rental + total_consumables + total_labour, 2),
+            "erect_labour_raw": total_labour,
+            "erect_labour_min_applied": erect_labour_min_applied,
+        },
+        "estimate_rules_preview": {
+            "engineering_fee": engineering,
+            "dismantle_labour_raw_placeholder": dismantle_labour_raw,
+            "dismantle_labour_min_applied_placeholder": dismantle_labour_min_applied,
         },
     }
 
