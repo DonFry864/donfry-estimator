@@ -377,12 +377,11 @@ def top_guard_rail_ends_equipment(top_guard_rail_ends_input: int) -> dict[str, f
     units = top_guard_rail_ends_units(top_guard_rail_ends_input)
 
     return {
-        "3M STANDARDS": 3 * units,
+        "3M STANDARDS": (3 * units) / 3,
         "1.15 SL": 4 * units,
         "EPP 1.15": 2 * units,
         "GL": 1 * units,
     }
-
 
 def top_guard_rail_ends_labour(height: float, top_guard_rail_ends_input: int, g3: float) -> float:
     units = top_guard_rail_ends_units(top_guard_rail_ends_input)
