@@ -672,8 +672,15 @@ def build_estimate_config_a(data: Input) -> dict:
     }
 
 def build_estimate_config_b(data: Input) -> dict:
-    return build_estimate_config_a(data)
-    
+    result = build_estimate_config_a(data)
+
+    for item in result["equipment_list"]:
+        if item["name"] == "SL7":
+            item["qty"] *= 0.8
+
+    return result
+
+
 def build_estimate(data: Input) -> dict:
     config = data.config.upper()
 
@@ -683,9 +690,7 @@ def build_estimate(data: Input) -> dict:
     if config == "B":
         return build_estimate_config_b(data)
 
-
     raise ValueError(f"Unsupported config: {config}")
-
 
 @app.get("/")
 def root():
