@@ -1,9 +1,18 @@
-# LOCKED VERSION -MATCHES EXCEL 100%
 from collections import defaultdict
 from fastapi import FastAPI
 from pydantic import BaseModel
 
 app = FastAPI()
+
+
+CONFIG_METADATA = {
+    "A": {
+        "code": "A",
+        "name": "Stucco 4' No Setback Full Deck",
+        "description": "Full deck scaffold configuration with 4' no setback layout. Includes base unit, end bay leg, base out, base out EB, tie-ins, top guard rail, top guard rail ends, tarp & canopy, tarp & canopy end bay, and access ladders as currently modeled.",
+        "image": "/static/config-a.png",
+    }
+}
 
 
 RENTAL_RATES = {
@@ -89,6 +98,7 @@ EQUIPMENT_ORDER = [
 
 
 class Input(BaseModel):
+    config: str = "A"
     length: float
     height: float
     g3: float = 1.10
@@ -247,8 +257,6 @@ def end_bay_leg_equipment(height: float, end_bay_leg_input: int, tarp: int) -> d
 
 
 def end_bay_leg_labour(height: float, end_bay_leg_input: int, tarp: int, g3: float) -> float:
-    # Sheet-locked labour recipe:
-    # 4 VM STANDARDS, 1 SBB 1.15, 5 1.15 SL, 1.32 GL, 2 EPP 1.15, 1.32 GL, 45.5 tarp
     f84 = (
         4 * LABOUR_RATES["3M STANDARDS"] +
         1 * LABOUR_RATES["SBB 1.15"] +
@@ -325,8 +333,7 @@ def access_ladder_equipment(height: float, access_ladder_input: int) -> dict[str
 
 
 def access_ladder_labour(height: float, access_ladder_input: int, g3: float) -> float:
-    # Sheet-locked base labour driver:
-    # result in sheet is 39.05 at g3 = 1.10
+    # Locked to current working estimate structure
     f153 = 35.5
     g155 = f153 * g3
 
@@ -449,25 +456,14 @@ def tarp_canopy_end_bay_ties(height: float, tarp: int) -> float:
 
 
 def tarp_canopy_equipment(length: float, height: float, tarp: int) -> dict[str, float]:
-    runs = (length / 7) * tarp
-    base_ties = ((length * height) / 91) * tarp
-    end_bay_ties = (height / 13) * tarp
+    runs = tarp_canopy_runs(length, tarp)
+    base_ties = tarp_canopy_base_ties(length, height, tarp)
+    end_bay_ties = tarp_canopy_end_bay_ties(height, tarp)
 
-    return {
-        "3M STANDARDS": (4 / 3) * runs,
-        "PFM7": 4 * runs,
-        "DL7": 1 * runs,
-        "SL7": base_ties + (4 * runs) + end_bay_ties,
-        "SBB7": 3 * runs,
-        "T8 TUBE": 1 * runs,
-        "CTTRA": (((length * height) / 91) + (height / 13)) * 2 * tarp + ((length / 7) * 2 * tarp),
-        "SBC": 1.4 * runs,
-        "SJ 18": 1 * runs,
-        "MONARFLEX TARP": 150 * runs,
-        "T2 TUBE": 1 * runs,
-        "PK8 8'WOOD PLANK": 2 * runs,
-        "EYE BOLT": base_ties + (4 * runs) + end_bay_ties,
-    }
+    sl7_qty = base_ties + (4 * runs) + end_bay_ties
+    cttra_qty = ((((length * height) / 91) + (height / 13)) * 2 * tarp) + ((length / 7) * 2 * tarp)
+    eye_bolt_qty = sl7_qty
+
     return {
         "3M STANDARDS": (4 / 3) * runs,
         "PFM7": 4 * runs,
@@ -477,8 +473,9 @@ def tarp_canopy_equipment(length: float, height: float, tarp: int) -> dict[str, 
         "T8 TUBE": 1 * runs,
         "CTTRA": cttra_qty,
         "SBC": 1.4 * runs,
-        "SJ 18": 2 * runs,
+        "SJ 18": 1 * runs,
         "MONARFLEX TARP": 150 * runs,
+        "T2 TUBE": 1 * runs,
         "PK8 8'WOOD PLANK": 2 * runs,
         "EYE BOLT": eye_bolt_qty,
     }
@@ -488,8 +485,6 @@ def tarp_canopy_labour(length: float, height: float, tarp: int) -> float:
     if height <= 0 or tarp <= 0:
         return 0.0
 
-    # Sheet logic:
-    # =SUM(X2/7 * G232)
     top_driver = (length / 7) * (150 * tarp)
     cost_per_vertical_ft = top_driver / height
     return height_engine_total(height, cost_per_vertical_ft)
@@ -555,7 +550,7 @@ def horizontal_repeatable_labour() -> float:
     return 0.0
 
 
-def build_estimate(data: Input) -> dict:
+def build_estimate_config_a(data: Input) -> dict:
     sections = {}
     ladder_input = resolved_access_ladder_input(data)
 
@@ -646,6 +641,10 @@ def build_estimate(data: Input) -> dict:
     response_inputs["access_ladder_input_resolved"] = ladder_input
 
     return {
+        "config": {
+            "selected": "A",
+            "metadata": CONFIG_METADATA["A"],
+        },
         "inputs": response_inputs,
         "equipment_list": build_equipment_list(combined_eq),
         "sections": {
@@ -668,9 +667,28 @@ def build_estimate(data: Input) -> dict:
     }
 
 
+def build_estimate(data: Input) -> dict:
+    config = data.config.upper()
+
+    if config == "A":
+        return build_estimate_config_a(data)
+
+    raise ValueError(f"Unsupported config: {config}")
+
+
 @app.get("/")
 def root():
-    return {"status": "ok"}
+    return {
+        "status": "ok",
+        "supported_configs": list(CONFIG_METADATA.keys()),
+    }
+
+
+@app.get("/configs")
+def get_configs():
+    return {
+        "configs": CONFIG_METADATA
+    }
 
 
 @app.post("/calculate")
