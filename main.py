@@ -645,31 +645,31 @@ def build_estimate_config_a(data: Input) -> dict:
     response_inputs = data.model_dump()
     response_inputs["access_ladder_input_resolved"] = ladder_input
 
-    return {
-        "config": {
-            "selected": "A",
-            "metadata": CONFIG_METADATA["A"],
-        },
-        "inputs": response_inputs,
-        "equipment_list": build_equipment_list(combined_eq),
-        "sections": {
-            name: {
-                "rental": section["rental"],
-                "consumables": section["consumables"],
-                "labour": section["labour"],
-            }
-            for name, section in sections.items()
-        },
-        "totals": {
-            "rental_28_day": total_rental,
-            "consumables": total_consumables,
-            "erect_labour_raw": total_labour,
-            "erect_labour_min_applied": erect_labour_min_applied,
-            "dismantle_labour_raw": dismantle_labour_raw,
-            "dismantle_labour_min_applied": dismantle_labour_min_applied,
-            "engineering_fee": engineering,
-        },
+   return {
+    "config": {
+        "selected": data.config.upper(),
+        "metadata": CONFIG_METADATA[data.config.upper()],
+    },
+    "inputs": response_inputs,
+    "equipment_list": build_equipment_list(combined_eq),
+    "sections": {
+        name: {
+            "rental": section["rental"],
+            "consumables": section["consumables"],
+            "labour": section["labour"],
+        }
+        for name, section in sections.items()
+    },
+    "totals": {
+        "rental_28_day": total_rental,
+        "consumables": total_consumables,
+        "erect_labour_raw": total_labour,
+        "erect_labour_min_applied": erect_labour_min_applied,
+        "dismantle_labour_raw": dismantle_labour_raw,
+        "dismantle_labour_min_applied": dismantle_labour_min_applied,
+        "engineering_fee": engineering,
     }
+}
 
 def build_estimate_config_b(data: Input) -> dict:
     return build_estimate_config_a(data)
