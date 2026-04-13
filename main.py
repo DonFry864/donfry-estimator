@@ -9,12 +9,17 @@ CONFIG_METADATA = {
     "A": {
         "code": "A",
         "name": "Stucco 4' No Setback Full Deck",
-        "description": "Full deck scaffold configuration with 4' no setback layout. Includes base unit, end bay leg, base out, base out EB, tie-ins, top guard rail, top guard rail ends, tarp & canopy, tarp & canopy end bay, and access ladders as currently modeled.",
+        "description": "Full deck scaffold configuration with 4' no setback layout.",
         "image": "/static/config-a.png",
+    },
+
+    "B": {
+        "code": "B",
+        "name": "Config B",
+        "description": "Alternate scaffold configuration (same inputs and logic, different equipment recipes).",
+        "image": "/static/config-b.png",
     }
 }
-
-
 RENTAL_RATES = {
     "3M STANDARDS": 7.14,
     "SL7": 3.79,
