@@ -448,43 +448,29 @@ def tarp_canopy_equipment(length: float, height: float, tarp: int) -> dict[str, 
     return {
         "3M STANDARDS": (4 / 3) * runs,
         "PFM7": 4 * runs,
+        "DL7": 1 * runs,
         "SL7": sl7_qty,
         "SBB7": 3 * runs,
-        "SBC": 1.4 * runs,
-        "SJ 18": 1 * runs,
-        "CTTRA": cttra_qty,
-        "MONARFLEX TARP": 150 * runs,
-        "DL7": 1 * runs,
         "T8 TUBE": 1 * runs,
-        "T2 TUBE": 1 * runs,
+        "CTTRA": cttra_qty,
+        "SBC": 1.4 * runs,
+        "SJ 18": 2 * runs,
+        "MONARFLEX TARP": 150 * runs,
         "PK8 8'WOOD PLANK": 2 * runs,
         "EYE BOLT": eye_bolt_qty,
     }
 
 
-def tarp_canopy_labour(height: float, tarp: int, g3: float) -> float:
-    # Follow sheet labour recipe exactly
-    f_tc = (
-        15 * LABOUR_RATES["3M STANDARDS"] +
-        128 * LABOUR_RATES["SL7"] +
-        44 * LABOUR_RATES["PFM7"] +
-        33 * LABOUR_RATES["SBB7"] +
-        15 * LABOUR_RATES["SBC"] +
-        11 * LABOUR_RATES["SJ 18"] +
-        190 * LABOUR_RATES["CTTRA"] +
-        1650 * LABOUR_RATES["MONARFLEX TARP"] +
-        11 * LABOUR_RATES["DL7"] +
-        11 * LABOUR_RATES["T8 TUBE"] +
-        11 * LABOUR_RATES["T2 TUBE"] +
-        22 * LABOUR_RATES["PK8 8'WOOD PLANK"]
-    )
-
-    g_tc = f_tc * g3
-
-    if height <= 0:
+def tarp_canopy_labour(length: float, height: float, tarp: int) -> float:
+    if height <= 0 or tarp <= 0:
         return 0.0
 
-    cost_per_vertical_ft = (tarp * g_tc) / height
+    # Excel logic:
+    # =SUM(X2/7*G232)
+    # For this section, G232 is the 150 tarp/canopy labour driver per run.
+    top_driver = (length / 7) * (150 * tarp)
+    cost_per_vertical_ft = top_driver / height
+
     return height_engine_total(height, cost_per_vertical_ft)
 
 
@@ -603,7 +589,7 @@ def build_estimate(data: Input) -> dict:
     tarp_ca_eq = tarp_canopy_equipment(data.length, data.height, data.tarp)
     sections["tarp_canopy"] = make_section(
         tarp_ca_eq,
-        tarp_canopy_labour(data.height, data.tarp, data.g3),
+        tarp_canopy_labour(data.length, data.height, data.tarp),
     )
 
     tceb_eq = tarp_canopy_end_bay_equipment(data.tarp)
