@@ -47,7 +47,7 @@ LABOUR_RATES = {
     "PK 5 SILL": 4.00,
     "SBC": 1.40,
     "SJ 18": 3.00,
-    "MONARFLEX TARP": 0.25,
+    "MONARFLEX TARP": 0.50,
     "CTTRA": 2.00,
     "EYE BOLT": 7.00,
     "AC10": 20.00,
