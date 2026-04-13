@@ -680,7 +680,7 @@ def build_estimate(data: Input) -> dict:
     if config == "A":
         return build_estimate_config_a(data)
 
-     if config == "B":
+    if config == "B":
         return build_estimate_config_b(data)
 
 
