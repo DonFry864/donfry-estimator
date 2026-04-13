@@ -20,7 +20,6 @@ RENTAL_RATES = {
     "SJ 18": 3.00,
     "MONARFLEX TARP": 0.50,
     "CTTRA": 2.00,
-    "EYE BOLT": 7.00,
     "AC10": 20.00,
     "LBB42": 5.00,
     "TRAP DOOR": 10.00,
@@ -48,7 +47,7 @@ LABOUR_RATES = {
     "PK 5 SILL": 4.00,
     "SBC": 1.40,
     "SJ 18": 3.00,
-    "MONARFLEX TARP": 0.50,
+    "MONARFLEX TARP": 0.25,
     "CTTRA": 2.00,
     "EYE BOLT": 7.00,
     "AC10": 20.00,
@@ -443,7 +442,7 @@ def tarp_canopy_equipment(length: float, height: float, tarp: int) -> dict[str, 
     end_bay_ties = tarp_canopy_end_bay_ties(height, tarp)
 
     sl7_qty = base_ties + (4 * runs) + end_bay_ties
-    cttra_qty = (((length * height) / 91) + (height / 13)) * 2 * tarp + ((length / 7) * 2 * tarp)
+    cttra_qty = ((((length * height) / 91) + (height / 13)) * 2 * tarp) + ((length / 7) * 2 * tarp)
     eye_bolt_qty = sl7_qty
 
     return {
@@ -463,31 +462,29 @@ def tarp_canopy_equipment(length: float, height: float, tarp: int) -> dict[str, 
     }
 
 
-def tarp_canopy_labour(length: float, height: float, tarp: int, g3: float) -> float:
-    equipment = tarp_canopy_equipment(length, height, tarp)
-
-    f_tarp_ca = (
-        equipment.get("3M STANDARDS", 0.0) * 3 * LABOUR_RATES["3M STANDARDS"] +
-        equipment.get("PFM7", 0.0) * LABOUR_RATES["PFM7"] +
-        equipment.get("SL7", 0.0) * LABOUR_RATES["SL7"] +
-        equipment.get("SBB7", 0.0) * LABOUR_RATES["SBB7"] +
-        equipment.get("SBC", 0.0) * LABOUR_RATES["SBC"] +
-        equipment.get("SJ 18", 0.0) * LABOUR_RATES["SJ 18"] +
-        equipment.get("CTTRA", 0.0) * LABOUR_RATES["CTTRA"] +
-        equipment.get("MONARFLEX TARP", 0.0) * LABOUR_RATES["MONARFLEX TARP"] +
-        equipment.get("DL7", 0.0) * LABOUR_RATES["DL7"] +
-        equipment.get("T8 TUBE", 0.0) * LABOUR_RATES["T8 TUBE"] +
-        equipment.get("T2 TUBE", 0.0) * LABOUR_RATES["T2 TUBE"] +
-        equipment.get("PK8 8'WOOD PLANK", 0.0) * LABOUR_RATES["PK8 8'WOOD PLANK"] +
-        equipment.get("EYE BOLT", 0.0) * LABOUR_RATES["EYE BOLT"]
+def tarp_canopy_labour(height: float, tarp: int, g3: float) -> float:
+    # Follow sheet labour recipe exactly
+    f_tc = (
+        15 * LABOUR_RATES["3M STANDARDS"] +
+        128 * LABOUR_RATES["SL7"] +
+        44 * LABOUR_RATES["PFM7"] +
+        33 * LABOUR_RATES["SBB7"] +
+        15 * LABOUR_RATES["SBC"] +
+        11 * LABOUR_RATES["SJ 18"] +
+        190 * LABOUR_RATES["CTTRA"] +
+        1650 * LABOUR_RATES["MONARFLEX TARP"] +
+        11 * LABOUR_RATES["DL7"] +
+        11 * LABOUR_RATES["T8 TUBE"] +
+        11 * LABOUR_RATES["T2 TUBE"] +
+        22 * LABOUR_RATES["PK8 8'WOOD PLANK"]
     )
 
-    g_tarp_ca = f_tarp_ca * g3
+    g_tc = f_tc * g3
 
     if height <= 0:
         return 0.0
 
-    cost_per_vertical_ft = g_tarp_ca / height
+    cost_per_vertical_ft = (tarp * g_tc) / height
     return height_engine_total(height, cost_per_vertical_ft)
 
 
@@ -524,7 +521,11 @@ def tarp_canopy_end_bay_labour(height: float, tarp: int, g3: float) -> float:
     )
 
     g_tceb = f_tceb * g3
-    cost_per_vertical_ft = (tarp * g_tceb) / 6.5
+
+    if height <= 0:
+        return 0.0
+
+    cost_per_vertical_ft = (tarp * g_tceb) / height
     return height_engine_total(height, cost_per_vertical_ft)
 
 
@@ -602,7 +603,7 @@ def build_estimate(data: Input) -> dict:
     tarp_ca_eq = tarp_canopy_equipment(data.length, data.height, data.tarp)
     sections["tarp_canopy"] = make_section(
         tarp_ca_eq,
-        tarp_canopy_labour(data.length, data.height, data.tarp, data.g3),
+        tarp_canopy_labour(data.height, data.tarp, data.g3),
     )
 
     tceb_eq = tarp_canopy_end_bay_equipment(data.tarp)
