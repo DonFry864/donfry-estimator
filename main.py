@@ -671,12 +671,18 @@ def build_estimate_config_a(data: Input) -> dict:
         },
     }
 
-
+def build_estimate_config_b(data: Input) -> dict:
+    return build_estimate_config_a(data)
+    
 def build_estimate(data: Input) -> dict:
     config = data.config.upper()
 
     if config == "A":
         return build_estimate_config_a(data)
+
+     if config == "B":
+        return build_estimate_config_b(data)
+
 
     raise ValueError(f"Unsupported config: {config}")
 
