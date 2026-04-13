@@ -448,14 +448,25 @@ def tarp_canopy_end_bay_ties(height: float, tarp: int) -> float:
 
 
 def tarp_canopy_equipment(length: float, height: float, tarp: int) -> dict[str, float]:
-    runs = tarp_canopy_runs(length, tarp)
-    base_ties = tarp_canopy_base_ties(length, height, tarp)
-    end_bay_ties = tarp_canopy_end_bay_ties(height, tarp)
+    runs = (length / 7) * tarp
+    base_ties = ((length * height) / 91) * tarp
+    end_bay_ties = (height / 13) * tarp
 
-    sl7_qty = base_ties + (4 * runs) + end_bay_ties
-    cttra_qty = ((((length * height) / 91) + (height / 13)) * 2 * tarp) + ((length / 7) * 2 * tarp)
-    eye_bolt_qty = sl7_qty
-
+    return {
+        "3M STANDARDS": (4 / 3) * runs,
+        "PFM7": 4 * runs,
+        "DL7": 1 * runs,
+        "SL7": base_ties + (4 * runs) + end_bay_ties,
+        "SBB7": 3 * runs,
+        "T8 TUBE": 1 * runs,
+        "CTTRA": (((length * height) / 91) + (height / 13)) * 2 * tarp + ((length / 7) * 2 * tarp),
+        "SBC": 1.4 * runs,
+        "SJ 18": 1 * runs,
+        "MONARFLEX TARP": 150 * runs,
+        "T2 TUBE": 1 * runs,
+        "PK8 8'WOOD PLANK": 2 * runs,
+        "EYE BOLT": base_ties + (4 * runs) + end_bay_ties,
+    }
     return {
         "3M STANDARDS": (4 / 3) * runs,
         "PFM7": 4 * runs,
