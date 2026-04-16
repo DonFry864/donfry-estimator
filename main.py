@@ -605,12 +605,16 @@ EQUIPMENT_RECIPES = {
     },
 }
 
+Yes — that line is indented wrong.
+
+Fix it to this exactly
 def build_estimate_config_a(data: Input) -> dict:
     sections = {}
     ladder_input = resolved_access_ladder_input(data)
- base_eq = EQUIPMENT_RECIPES[data.config.upper()]["base_unit"](
-    data.length, data.height, data.tarp
-)
+
+    base_eq = EQUIPMENT_RECIPES[data.config.upper()]["base_unit"](
+        data.length, data.height, data.tarp
+    )
     sections["base_unit"] = make_section(
         base_eq,
         base_unit_labour(data.length, data.height, data.tarp, data.g3),
