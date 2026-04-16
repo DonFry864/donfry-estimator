@@ -624,14 +624,15 @@ def build_estimate_config_a(data: Input) -> dict:
     base_eq = EQUIPMENT_RECIPES[data.config.upper()]["base_unit"](
         data.length, data.height, data.tarp
     )
-    sections["base_unit"] = make_section(
-        base_eq,
-       LABOUR_RECIPES[data.config.upper()]["base_unit"](
-    data.length, data.height, data.tarp, data.g3
+sections["base_unit"] = make_section(
+    base_eq,
+    LABOUR_RECIPES[data.config.upper()]["base_unit"](
+        data.length, data.height, data.tarp, data.g3
+    ),
 )
 
-    ebl_eq = end_bay_leg_equipment(data.height, data.end_bay_leg_input, data.tarp)
-    sections["end_bay_leg"] = make_section(
+ebl_eq = end_bay_leg_equipment(data.height, data.end_bay_leg_input, data.tarp)
+sections["end_bay_leg"] = make_section(
         ebl_eq,
         end_bay_leg_labour(data.height, data.end_bay_leg_input, data.tarp, data.g3),
     )
