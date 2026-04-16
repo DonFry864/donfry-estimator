@@ -43,6 +43,7 @@ RENTAL_RATES = {
     "T8 TUBE": 4.00,
     "T2 TUBE": 1.00,
     "PK8 8'WOOD PLANK": 4.00,
+    'sbkts 24"': 4.62,
 }
 
 CONSUMABLE_RATES = {
@@ -73,6 +74,7 @@ LABOUR_RATES = {
     "T8 TUBE": 0.00,
     "T2 TUBE": 0.00,
     "PK8 8'WOOD PLANK": 0.00,
+    'sbkts 24"': 4.62,
 }
 
 EQUIPMENT_ORDER = [
@@ -85,6 +87,7 @@ EQUIPMENT_ORDER = [
     "EPP 1.15",
     "1.15 SL",
     "SBB 1.15",
+    'sbkts 24"',
     "PK 5 SILL",
     "SBC",
     "SJ 18",
@@ -99,6 +102,7 @@ EQUIPMENT_ORDER = [
     "T8 TUBE",
     "T2 TUBE",
     "PK8 8'WOOD PLANK",
+  
 ]
 
 
@@ -202,6 +206,20 @@ def base_unit_equipment(length: float, height: float, tarp: int) -> dict[str, fl
         "EPP7": 1 * base_units,
         "1.15 SL": 1 * base_units,
         "SBB 1.15": 1 * base_units,
+        "MONARFLEX TARP": 45.5 * base_units * tarp,
+    }
+def base_unit_equipment_b(length: float, height: float, tarp: int) -> dict[str, float]:
+    base_units = (length * height) / 45.5
+    return {
+        "3M STANDARDS": (4 / 3) * base_units,
+        "PFM7": 3 * base_units,
+        "SL7": 4 * base_units,
+        "SBB7": 0.5 * base_units,
+        "GL": 1.32 * base_units,
+        "EPP7": 1 * base_units,
+        "1.15 SL": 1 * base_units,
+        "SBB 1.15": 0.5 * base_units,
+        'sbkts 24"': 1 * base_units,
         "MONARFLEX TARP": 45.5 * base_units * tarp,
     }
 
@@ -553,13 +571,47 @@ def horizontal_repeatable_equipment() -> dict[str, float]:
 
 def horizontal_repeatable_labour() -> float:
     return 0.0
-
+# -------------------------
+# Equipment Recipe Registry
+# -------------------------
+EQUIPMENT_RECIPES = {
+    "A": {
+        "base_unit": base_unit_equipment,
+        "end_bay_leg": end_bay_leg_equipment,
+        "base_out": base_out_equipment,
+        "base_out_eb": base_out_eb_equipment,
+        "access_ladder": access_ladder_equipment,
+        "tie_in": tie_in_equipment,
+        "top_guard_rail": top_guard_rail_equipment,
+        "top_guard_rail_ends": top_guard_rail_ends_equipment,
+        "tarp_canopy": tarp_canopy_equipment,
+        "tarp_canopy_end_bay": tarp_canopy_end_bay_equipment,
+        "vertical_repeatable": vertical_repeatable_equipment,
+        "horizontal_repeatable": horizontal_repeatable_equipment,
+    },
+    "B": {
+        "base_unit": base_unit_equipment_b,
+        "end_bay_leg": end_bay_leg_equipment,
+        "base_out": base_out_equipment,
+        "base_out_eb": base_out_eb_equipment,
+        "access_ladder": access_ladder_equipment,
+        "tie_in": tie_in_equipment,
+        "top_guard_rail": top_guard_rail_equipment,
+        "top_guard_rail_ends": top_guard_rail_ends_equipment,
+        "tarp_canopy": tarp_canopy_equipment,
+        "tarp_canopy_end_bay": tarp_canopy_end_bay_equipment,
+        "vertical_repeatable": vertical_repeatable_equipment,
+        "horizontal_repeatable": horizontal_repeatable_equipment,
+    },
+}
 
 def build_estimate_config_a(data: Input) -> dict:
     sections = {}
     ladder_input = resolved_access_ladder_input(data)
 
-    base_eq = base_unit_equipment(data.length, data.height, data.tarp)
+        base_eq = EQUIPMENT_RECIPES[data.config.upper()]["base_unit"](
+    data.length, data.height, data.tarp
+)
     sections["base_unit"] = make_section(
         base_eq,
         base_unit_labour(data.length, data.height, data.tarp, data.g3),
@@ -671,14 +723,10 @@ def build_estimate_config_a(data: Input) -> dict:
         },
     }
 
+
 def build_estimate_config_b(data: Input) -> dict:
-    result = build_estimate_config_a(data)
-
-    for item in result["equipment_list"]:
-        if item["name"] == "SL7":
-            item["qty"] *= 0.8
-
-    return result
+    return build_estimate_config_a(data)
+    
 
 
 def build_estimate(data: Input) -> dict:
