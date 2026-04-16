@@ -44,6 +44,8 @@ RENTAL_RATES = {
     "T8 TUBE": 4.00,
     "T2 TUBE": 1.00,
     "PK8 8'WOOD PLANK": 4.00,
+    "SL 24\"": 2.5,
+    "EPP 24\"": 3.5,
 }
 
 CONSUMABLE_RATES = {
@@ -75,6 +77,9 @@ LABOUR_RATES = {
     "T8 TUBE": 0.00,
     "T2 TUBE": 0.00,
     "PK8 8'WOOD PLANK": 0.00,
+    "SL 24\"": 2.5,
+    "EPP 24\"": 3.5,
+    
 }
 
 EQUIPMENT_ORDER = [
@@ -102,6 +107,9 @@ EQUIPMENT_ORDER = [
     "T8 TUBE",
     "T2 TUBE",
     "PK8 8'WOOD PLANK",
+    "SL 24\"",
+    "EPP 24\"",
+    
 ]
 
 
@@ -303,16 +311,29 @@ def base_unit_labour_b(length: float, height: float, tarp: int, g3: float) -> fl
 def end_bay_leg_units(height: float, end_bay_leg_input: int) -> float:
     return (height / 6.5) * end_bay_leg_input
 
-
 def end_bay_leg_equipment(height: float, end_bay_leg_input: int, tarp: int) -> dict[str, float]:
     units = end_bay_leg_units(height, end_bay_leg_input)
     return {
         "3M STANDARDS": (4 / 3) * units,
-        "SBB7": 1 * units,
+        "SBB 1.15": 1 * units,
+        "1.15 SL": 5 * units,
         "GL": 1.32 * units,
         "EPP 1.15": 2 * units,
-        "1.15 SL": 5 * units,
-        "SBB 1.15": 5 * units,
+        "MONARFLEX TARP": height * tarp * end_bay_leg_input,
+    }
+
+
+def end_bay_leg_equipment_b(height: float, end_bay_leg_input: int, tarp: int) -> dict[str, float]:
+    units = end_bay_leg_units(height, end_bay_leg_input)
+    return {
+        "3M STANDARDS": (4 / 3) * units,
+        "SBB 1.15": 1 * units,
+        "1.15 SL": 4 * units,
+        "GL": 1.32 * units,
+        "EPP 1.15": 0 * units,
+        "SL 24\"": 4 * units,
+        "EPP 24\"": 2 * units,
+        'sbkts 24"': 1 * units,
         "MONARFLEX TARP": height * tarp * end_bay_leg_input,
     }
 
@@ -625,9 +646,10 @@ EQUIPMENT_RECIPES = {
         "vertical_repeatable": vertical_repeatable_equipment,
         "horizontal_repeatable": horizontal_repeatable_equipment,
     },
+  
     "B": {
         "base_unit": base_unit_equipment_b,
-        "end_bay_leg": end_bay_leg_equipment,
+        "end_bay_leg": end_bay_leg_equipment_b,
         "base_out": base_out_equipment,
         "base_out_eb": base_out_eb_equipment,
         "access_ladder": access_ladder_equipment,
@@ -639,21 +661,6 @@ EQUIPMENT_RECIPES = {
         "vertical_repeatable": vertical_repeatable_equipment,
         "horizontal_repeatable": horizontal_repeatable_equipment,
     },
-}
-
-# -------------------------
-# Labour Recipe Registry
-# -------------------------
-LABOUR_RECIPES = {
-    "A": {
-        "base_unit": base_unit_labour,
-    },
-    "B": {
-        "base_unit": base_unit_labour_b,
-    },
-}
-
-
 def build_estimate_config_a(data: Input) -> dict:
     sections = {}
     ladder_input = resolved_access_ladder_input(data)
