@@ -604,6 +604,17 @@ EQUIPMENT_RECIPES = {
         "horizontal_repeatable": horizontal_repeatable_equipment,
     },
 }
+# -------------------------
+# Labour Recipe Registry
+# -------------------------
+LABOUR_RECIPES = {
+    "A": {
+        "base_unit": base_unit_labour,
+    },
+    "B": {
+        "base_unit": base_unit_labour_b,
+    },
+}
 
 
 def build_estimate_config_a(data: Input) -> dict:
@@ -615,8 +626,9 @@ def build_estimate_config_a(data: Input) -> dict:
     )
     sections["base_unit"] = make_section(
         base_eq,
-        base_unit_labour(data.length, data.height, data.tarp, data.g3),
-    )
+       LABOUR_RECIPES[data.config.upper()]["base_unit"](
+    data.length, data.height, data.tarp, data.g3
+)
 
     ebl_eq = end_bay_leg_equipment(data.height, data.end_bay_leg_input, data.tarp)
     sections["end_bay_leg"] = make_section(
