@@ -624,30 +624,30 @@ def build_estimate_config_a(data: Input) -> dict:
     base_eq = EQUIPMENT_RECIPES[data.config.upper()]["base_unit"](
         data.length, data.height, data.tarp
     )
-sections["base_unit"] = make_section(
-    base_eq,
-    LABOUR_RECIPES[data.config.upper()]["base_unit"](
-        data.length, data.height, data.tarp, data.g3
-    ),
-)
+    sections["base_unit"] = make_section(
+        base_eq,
+        LABOUR_RECIPES[data.config.upper()]["base_unit"](
+            data.length, data.height, data.tarp, data.g3
+        ),
+    )
 
-ebl_eq = end_bay_leg_equipment(data.height, data.end_bay_leg_input, data.tarp)
-sections["end_bay_leg"] = make_section(
-    ebl_eq,
-    end_bay_leg_labour(data.height, data.end_bay_leg_input, data.tarp, data.g3),
-)
+    ebl_eq = end_bay_leg_equipment(data.height, data.end_bay_leg_input, data.tarp)
+    sections["end_bay_leg"] = make_section(
+        ebl_eq,
+        end_bay_leg_labour(data.height, data.end_bay_leg_input, data.tarp, data.g3),
+    )
 
-bo_eq = base_out_equipment(data.base_out_input)
-sections["base_out"] = make_section(
-    bo_eq,
-    base_out_labour(data.length, data.base_out_input),
-)
+    bo_eq = base_out_equipment(data.base_out_input)
+    sections["base_out"] = make_section(
+        bo_eq,
+        base_out_labour(data.length, data.base_out_input),
+    )
 
-boeb_eq = base_out_eb_equipment(data.base_out_eb_input)
-sections["base_out_eb"] = make_section(
-    boeb_eq,
-    base_out_eb_labour(data.base_out_eb_input, data.g3),
-)
+    boeb_eq = base_out_eb_equipment(data.base_out_eb_input)
+    sections["base_out_eb"] = make_section(
+        boeb_eq,
+        base_out_eb_labour(data.base_out_eb_input, data.g3),
+    )
 
     al_eq = access_ladder_equipment(data.height, ladder_input)
     sections["access_ladder"] = make_section(
@@ -736,7 +736,6 @@ sections["base_out_eb"] = make_section(
             "engineering_fee": engineering,
         },
     }
-
 
 def build_estimate_config_b(data: Input) -> dict:
     return build_estimate_config_a(data)
