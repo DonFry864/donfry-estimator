@@ -12,14 +12,14 @@ CONFIG_METADATA = {
         "description": "Full deck scaffold configuration with 4' no setback layout.",
         "image": "/static/config-a.png",
     },
-
     "B": {
         "code": "B",
         "name": "Config B",
         "description": "Alternate scaffold configuration (same inputs and logic, different equipment recipes).",
         "image": "/static/config-b.png",
-    }
+    },
 }
+
 RENTAL_RATES = {
     "3M STANDARDS": 7.14,
     "SL7": 3.79,
@@ -30,6 +30,7 @@ RENTAL_RATES = {
     "EPP 1.15": 3.50,
     "1.15 SL": 3.01,
     "SBB 1.15": 5.00,
+    'sbkts 24"': 4.62,
     "PK 5 SILL": 4.00,
     "SBC": 1.40,
     "SJ 18": 3.00,
@@ -43,7 +44,6 @@ RENTAL_RATES = {
     "T8 TUBE": 4.00,
     "T2 TUBE": 1.00,
     "PK8 8'WOOD PLANK": 4.00,
-    'sbkts 24"': 4.62,
 }
 
 CONSUMABLE_RATES = {
@@ -60,6 +60,7 @@ LABOUR_RATES = {
     "EPP 1.15": 3.50,
     "1.15 SL": 3.01,
     "SBB 1.15": 5.00,
+    'sbkts 24"': 4.62,
     "PK 5 SILL": 4.00,
     "SBC": 1.40,
     "SJ 18": 3.00,
@@ -74,7 +75,6 @@ LABOUR_RATES = {
     "T8 TUBE": 0.00,
     "T2 TUBE": 0.00,
     "PK8 8'WOOD PLANK": 0.00,
-    'sbkts 24"': 4.62,
 }
 
 EQUIPMENT_ORDER = [
@@ -102,7 +102,6 @@ EQUIPMENT_ORDER = [
     "T8 TUBE",
     "T2 TUBE",
     "PK8 8'WOOD PLANK",
-  
 ]
 
 
@@ -208,6 +207,8 @@ def base_unit_equipment(length: float, height: float, tarp: int) -> dict[str, fl
         "SBB 1.15": 1 * base_units,
         "MONARFLEX TARP": 45.5 * base_units * tarp,
     }
+
+
 def base_unit_equipment_b(length: float, height: float, tarp: int) -> dict[str, float]:
     base_units = (length * height) / 45.5
     return {
@@ -226,14 +227,51 @@ def base_unit_equipment_b(length: float, height: float, tarp: int) -> dict[str, 
 
 def base_unit_labour(length: float, height: float, tarp: int, g3: float) -> float:
     f15 = (
-        4 * LABOUR_RATES["3M STANDARDS"] +
-        2 * LABOUR_RATES["PFM7"] +
-        4 * LABOUR_RATES["SL7"] +
-        0.5 * LABOUR_RATES["SBB7"] +
-        1.32 * LABOUR_RATES["GL"] +
-        1 * LABOUR_RATES["EPP7"] +
-        1 * LABOUR_RATES["1.15 SL"] +
-        (45.5 * LABOUR_RATES["MONARFLEX TARP"] * tarp)
+        4 * LABOUR_RATES["3M STANDARDS"]
+        + 2 * LABOUR_RATES["PFM7"]
+        + 4 * LABOUR_RATES["SL7"]
+        + 0.5 * LABOUR_RATES["SBB7"]
+        + 1.32 * LABOUR_RATES["GL"]
+        + 1 * LABOUR_RATES["EPP7"]
+        + 1 * LABOUR_RATES["1.15 SL"]
+        + (45.5 * LABOUR_RATES["MONARFLEX TARP"] * tarp)
+    )
+    g16 = 45.5 * 0.25 * tarp
+    g15 = (f15 * g3) + g16
+
+    total = 0.0
+    remaining_height = height
+    first = True
+
+    while remaining_height >= -45.5:
+        area = remaining_height * length
+        factor = 1.0 if first else 0.7
+        row_value = (area / 45.5) * g15 * factor
+
+        if row_value > 0:
+            total += row_value
+
+        if first:
+            remaining_height -= 19.5
+            first = False
+        else:
+            remaining_height -= 6.5
+
+    return round(total, 2)
+
+
+def base_unit_labour_b(length: float, height: float, tarp: int, g3: float) -> float:
+    f15 = (
+        4 * LABOUR_RATES["3M STANDARDS"]
+        + 3 * LABOUR_RATES["PFM7"]
+        + 4 * LABOUR_RATES["SL7"]
+        + 0.5 * LABOUR_RATES["SBB7"]
+        + 1.32 * LABOUR_RATES["GL"]
+        + 1 * LABOUR_RATES["EPP7"]
+        + 1 * LABOUR_RATES["1.15 SL"]
+        + 0.5 * LABOUR_RATES["SBB 1.15"]
+        + 1 * LABOUR_RATES['sbkts 24"']
+        + (45.5 * LABOUR_RATES["MONARFLEX TARP"] * tarp)
     )
     g16 = 45.5 * 0.25 * tarp
     g15 = (f15 * g3) + g16
@@ -281,13 +319,13 @@ def end_bay_leg_equipment(height: float, end_bay_leg_input: int, tarp: int) -> d
 
 def end_bay_leg_labour(height: float, end_bay_leg_input: int, tarp: int, g3: float) -> float:
     f84 = (
-        4 * LABOUR_RATES["3M STANDARDS"] +
-        1 * LABOUR_RATES["SBB 1.15"] +
-        5 * LABOUR_RATES["1.15 SL"] +
-        1.32 * LABOUR_RATES["GL"] +
-        2 * LABOUR_RATES["EPP 1.15"] +
-        1.32 * LABOUR_RATES["GL"] +
-        45.5 * LABOUR_RATES["MONARFLEX TARP"] * tarp
+        4 * LABOUR_RATES["3M STANDARDS"]
+        + 1 * LABOUR_RATES["SBB 1.15"]
+        + 5 * LABOUR_RATES["1.15 SL"]
+        + 1.32 * LABOUR_RATES["GL"]
+        + 2 * LABOUR_RATES["EPP 1.15"]
+        + 1.32 * LABOUR_RATES["GL"]
+        + 45.5 * LABOUR_RATES["MONARFLEX TARP"] * tarp
     )
     g84 = f84 * g3
     units = end_bay_leg_units(height, end_bay_leg_input)
@@ -327,10 +365,10 @@ def base_out_eb_equipment(base_out_eb_input: int) -> dict[str, float]:
 
 def base_out_eb_labour(base_out_eb_input: int, g3: float) -> float:
     f144 = (
-        1 * LABOUR_RATES["1.15 SL"] +
-        1 * LABOUR_RATES["PK 5 SILL"] +
-        2 * LABOUR_RATES["SBC"] +
-        2 * LABOUR_RATES["SJ 18"]
+        1 * LABOUR_RATES["1.15 SL"]
+        + 1 * LABOUR_RATES["PK 5 SILL"]
+        + 2 * LABOUR_RATES["SBC"]
+        + 2 * LABOUR_RATES["SJ 18"]
     )
     return round(f144 * g3 * base_out_eb_input, 2)
 
@@ -344,7 +382,6 @@ def access_ladder_units(height: float, access_ladder_input: int) -> float:
 
 def access_ladder_equipment(height: float, access_ladder_input: int) -> dict[str, float]:
     units = access_ladder_units(height, access_ladder_input)
-
     return {
         "1.15 SL": 1 * units,
         "AC10": 1 * units,
@@ -356,7 +393,6 @@ def access_ladder_equipment(height: float, access_ladder_input: int) -> dict[str
 
 
 def access_ladder_labour(height: float, access_ladder_input: int, g3: float) -> float:
-    # Locked to current working estimate structure
     f153 = 35.5
     g155 = f153 * g3
 
@@ -413,10 +449,10 @@ def top_guard_rail_labour(length: float, height: float, top_guard_rail_input: in
     bays = (length / 7) * top_guard_rail_input
 
     f_top_gr = (
-        1 * LABOUR_RATES["3M STANDARDS"] +
-        2 * LABOUR_RATES["SL7"] +
-        1 * LABOUR_RATES["EPP7"] +
-        0.33 * LABOUR_RATES["GL"]
+        1 * LABOUR_RATES["3M STANDARDS"]
+        + 2 * LABOUR_RATES["SL7"]
+        + 1 * LABOUR_RATES["EPP7"]
+        + 0.33 * LABOUR_RATES["GL"]
     )
     g_top_gr = f_top_gr * g3
 
@@ -436,7 +472,6 @@ def top_guard_rail_ends_units(top_guard_rail_ends_input: int) -> float:
 
 def top_guard_rail_ends_equipment(top_guard_rail_ends_input: int) -> dict[str, float]:
     units = top_guard_rail_ends_units(top_guard_rail_ends_input)
-
     return {
         "3M STANDARDS": 1 * units,
         "1.15 SL": 4 * units,
@@ -449,10 +484,10 @@ def top_guard_rail_ends_labour(height: float, top_guard_rail_ends_input: int, g3
     units = top_guard_rail_ends_units(top_guard_rail_ends_input)
 
     f_top_gr_ends = (
-        3 * LABOUR_RATES["3M STANDARDS"] +
-        4 * LABOUR_RATES["1.15 SL"] +
-        2 * LABOUR_RATES["EPP 1.15"] +
-        1 * LABOUR_RATES["GL"]
+        3 * LABOUR_RATES["3M STANDARDS"]
+        + 4 * LABOUR_RATES["1.15 SL"]
+        + 2 * LABOUR_RATES["EPP 1.15"]
+        + 1 * LABOUR_RATES["GL"]
     )
     g_top_gr_ends = f_top_gr_ends * g3
 
@@ -518,7 +553,6 @@ def tarp_canopy_labour(length: float, height: float, tarp: int) -> float:
 # -------------------------
 def tarp_canopy_end_bay_equipment(tarp: int) -> dict[str, float]:
     driver = float(tarp)
-
     return {
         "3M STANDARDS": (2 / 3) * driver,
         "DL7": 1 * driver,
@@ -534,15 +568,15 @@ def tarp_canopy_end_bay_equipment(tarp: int) -> dict[str, float]:
 
 def tarp_canopy_end_bay_labour(height: float, tarp: int, g3: float) -> float:
     f_tceb = (
-        2 * LABOUR_RATES["3M STANDARDS"] +
-        1 * LABOUR_RATES["DL7"] +
-        6 * LABOUR_RATES["SL7"] +
-        1 * LABOUR_RATES["SJ 18"] +
-        1 * LABOUR_RATES["SBC"] +
-        1 * LABOUR_RATES["T8 TUBE"] +
-        2 * LABOUR_RATES["CTTRA"] +
-        2 * LABOUR_RATES["T2 TUBE"] +
-        300 * LABOUR_RATES["MONARFLEX TARP"]
+        2 * LABOUR_RATES["3M STANDARDS"]
+        + 1 * LABOUR_RATES["DL7"]
+        + 6 * LABOUR_RATES["SL7"]
+        + 1 * LABOUR_RATES["SJ 18"]
+        + 1 * LABOUR_RATES["SBC"]
+        + 1 * LABOUR_RATES["T8 TUBE"]
+        + 2 * LABOUR_RATES["CTTRA"]
+        + 2 * LABOUR_RATES["T2 TUBE"]
+        + 300 * LABOUR_RATES["MONARFLEX TARP"]
     )
 
     g_tceb = f_tceb * g3
@@ -571,6 +605,8 @@ def horizontal_repeatable_equipment() -> dict[str, float]:
 
 def horizontal_repeatable_labour() -> float:
     return 0.0
+
+
 # -------------------------
 # Equipment Recipe Registry
 # -------------------------
@@ -604,6 +640,7 @@ EQUIPMENT_RECIPES = {
         "horizontal_repeatable": horizontal_repeatable_equipment,
     },
 }
+
 # -------------------------
 # Labour Recipe Registry
 # -------------------------
@@ -737,9 +774,9 @@ def build_estimate_config_a(data: Input) -> dict:
         },
     }
 
+
 def build_estimate_config_b(data: Input) -> dict:
     return build_estimate_config_a(data)
-    
 
 
 def build_estimate(data: Input) -> dict:
@@ -752,6 +789,7 @@ def build_estimate(data: Input) -> dict:
         return build_estimate_config_b(data)
 
     raise ValueError(f"Unsupported config: {config}")
+
 
 @app.get("/")
 def root():
