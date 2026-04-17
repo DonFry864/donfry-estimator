@@ -530,10 +530,16 @@ def labour_rate_sum(recipe: list[dict], context: dict, include_tarp_quarter: boo
 
 def labour_base_unit(config: str, context: dict) -> float:
     recipe = BASE_UNIT_RECIPES[config]
-    labour_per_45_5 = labour_rate_sum(recipe, context, include_tarp_quarter=False)
-    tarp_qty = next((eval_expr(line["expr"], context) for line in recipe if line["name"] == "MONARFLEX TARP"), 0.0)
-    tarp_extra = tarp_qty * 0.25
-    price_per_45_5 = (labour_per_45_5 * context["g3"]) + tarp_extra
+
+    f15 = 0.0
+    for line in recipe:
+        if line["name"] == "MONARFLEX TARP":
+            continue
+        qty = eval_expr(line["expr"], context)
+        f15 += qty * LABOUR_RATES.get(line["name"], 0.0)
+
+    g16 = 45.5 * LABOUR_RATES["MONARFLEX TARP"] * context["tarp"]
+    g15 = (f15 * context["g3"]) + g16
 
     total = 0.0
     remaining_height = context["height"]
@@ -541,7 +547,7 @@ def labour_base_unit(config: str, context: dict) -> float:
     while remaining_height >= -45.5:
         area = remaining_height * context["length"]
         factor = 1.0 if first else 0.7
-        row_value = (area / 45.5) * price_per_45_5 * factor
+        row_value = (area / 45.5) * g15 * factor
         if row_value > 0:
             total += row_value
         if first:
@@ -552,10 +558,31 @@ def labour_base_unit(config: str, context: dict) -> float:
     return round(total, 2)
 
 
+def labour_end_bay_leg(config: str, context: dict) -> float:
+    if context["height"] <= 0:
+        return 0.0
+
+    recipe = END_BAY_LEG_RECIPES[config]
+
+    f84 = 0.0
+    for line in recipe:
+        if line["name"] == "MONARFLEX TARP":
+            continue
+        qty = eval_expr(line["expr"], context)
+        f84 += qty * LABOUR_RATES.get(line["name"], 0.0)
+
+    f84 += 45.5 * LABOUR_RATES["MONARFLEX TARP"] * context["tarp"]
+
+    g84 = f84 * context["g3"]
+    units = context["end_bay_units"]
+    cost_per_vertical_ft = (units * g84) / context["height"]
+    return height_engine_total(context["height"], cost_per_vertical_ft)
+
+
 def labour_vertical_height_engine(recipe: list[dict], context: dict, driver_value: float) -> float:
     if context["height"] <= 0 or driver_value <= 0:
         return 0.0
-    labour_per_unit = labour_rate_sum(recipe, context, include_tarp_quarter=True) * context["g3"]
+    labour_per_unit = labour_rate_sum(recipe, context, include_tarp_quarter=False) * context["g3"]
     cost_per_vertical_ft = (driver_value * labour_per_unit) / context["height"]
     return height_engine_total(context["height"], cost_per_vertical_ft)
 
@@ -821,7 +848,7 @@ def build_standard_estimate(data: Input) -> dict:
 
     sections["end_bay_leg"] = make_section(
         run_equipment_recipe(END_BAY_LEG_RECIPES[config], context),
-        labour_vertical_height_engine(END_BAY_LEG_RECIPES[config], context, context["end_bay_units"]),
+        labour_end_bay_leg(config, context),
     )
 
     sections["base_out"] = make_section(
