@@ -15,10 +15,47 @@ CONFIG_METADATA = {
     "B": {
         "code": "B",
         "name": "Config B",
-        "description": "Alternate scaffold configuration (same inputs and logic, different equipment recipes).",
+        "description": "Alternate scaffold configuration.",
         "image": "/static/config-b.png",
     },
+    "C": {
+        "code": "C",
+        "name": "Config C",
+        "description": "5-foot ledger variant with side brackets.",
+        "image": "/static/config-c.png",
+    },
+    "D": {
+        "code": "D",
+        "name": "Config D",
+        "description": "5-foot diagonal variant with side brackets.",
+        "image": "/static/config-d.png",
+    },
+    "F": {
+        "code": "F",
+        "name": "Config F",
+        "description": "Reduced base recipe using 1.15 family.",
+        "image": "/static/config-f.png",
+    },
+    "G": {
+        "code": "G",
+        "name": "Config G",
+        "description": "Reduced base recipe with paired deck level repeatable units.",
+        "image": "/static/config-g.png",
+    },
+    "H": {
+        "code": "H",
+        "name": "Config H",
+        "description": "5-foot ledger reduced recipe with paired deck level repeatable units.",
+        "image": "/static/config-h.png",
+    },
+    "I": {
+        "code": "I",
+        "name": "Config I",
+        "description": "5-foot diagonal reduced recipe with paired deck level repeatable units.",
+        "image": "/static/config-i.png",
+    },
 }
+
 
 RENTAL_RATES = {
     "3M STANDARDS": 7.14,
@@ -33,6 +70,10 @@ RENTAL_RATES = {
     'sbkts 24"': 4.62,
     'SL 24"': 2.50,
     'EPP 24"': 3.50,
+    "SL5": 3.36,
+    "SBB5": 5.00,
+    "DL5": 10.50,
+    "EPP5": 3.50,
     "PK 5 SILL": 4.00,
     "SBC": 1.40,
     "SJ 18": 3.00,
@@ -48,9 +89,11 @@ RENTAL_RATES = {
     "PK8 8'WOOD PLANK": 4.00,
 }
 
+
 CONSUMABLE_RATES = {
     "EYE BOLT": 7.00,
 }
+
 
 LABOUR_RATES = {
     "3M STANDARDS": 2.38,
@@ -65,12 +108,16 @@ LABOUR_RATES = {
     'sbkts 24"': 4.62,
     'SL 24"': 2.50,
     'EPP 24"': 3.50,
+    "SL5": 3.36,
+    "SBB5": 5.00,
+    "DL5": 10.50,
+    "EPP5": 3.50,
     "PK 5 SILL": 4.00,
     "SBC": 1.40,
     "SJ 18": 3.00,
     "MONARFLEX TARP": 0.50,
-    "CTTRA": 2.00,
     "EYE BOLT": 7.00,
+    "CTTRA": 2.00,
     "AC10": 20.00,
     "LBB42": 5.00,
     "TRAP DOOR": 10.00,
@@ -80,6 +127,7 @@ LABOUR_RATES = {
     "T2 TUBE": 0.00,
     "PK8 8'WOOD PLANK": 0.00,
 }
+
 
 EQUIPMENT_ORDER = [
     "3M STANDARDS",
@@ -94,6 +142,10 @@ EQUIPMENT_ORDER = [
     'sbkts 24"',
     'SL 24"',
     'EPP 24"',
+    "SL5",
+    "SBB5",
+    "DL5",
+    "EPP5",
     "PK 5 SILL",
     "SBC",
     "SJ 18",
@@ -111,6 +163,10 @@ EQUIPMENT_ORDER = [
 ]
 
 
+STANDARD_CONFIGS = {"A", "B", "C", "D", "F", "G", "H", "I"}
+DECK_LEVEL_CONFIGS = {"G", "H", "I"}
+
+
 class Input(BaseModel):
     config: str = "A"
     length: float
@@ -126,10 +182,261 @@ class Input(BaseModel):
     top_guard_rail_ends_input: int = 0
     tie_in_input: int = 0
     top_deck_level_input: int = 0
+    deck_level_end_bay_input: int = 0
+
+
+BASE_UNIT_RECIPES = {
+    "A": [
+        {"name": "3M STANDARDS", "expr": "(4/3) * base_units"},
+        {"name": "PFM7", "expr": "2 * base_units"},
+        {"name": "SL7", "expr": "4 * base_units"},
+        {"name": "SBB7", "expr": "0.5 * base_units"},
+        {"name": "GL", "expr": "1.32 * base_units"},
+        {"name": "EPP7", "expr": "1 * base_units"},
+        {"name": "1.15 SL", "expr": "1 * base_units"},
+        {"name": "SBB 1.15", "expr": "1 * base_units"},
+        {"name": "MONARFLEX TARP", "expr": "45.5 * base_units * tarp"},
+    ],
+    "B": [
+        {"name": "3M STANDARDS", "expr": "(4/3) * base_units"},
+        {"name": "PFM7", "expr": "3 * base_units"},
+        {"name": "SL7", "expr": "4 * base_units"},
+        {"name": "SBB7", "expr": "0.5 * base_units"},
+        {"name": "GL", "expr": "1.32 * base_units"},
+        {"name": "SBB 1.15", "expr": "0.5 * base_units"},
+        {"name": "1.15 SL", "expr": "1 * base_units"},
+        {"name": 'sbkts 24"', "expr": "1 * base_units"},
+        {"name": "EPP7", "expr": "1 * base_units"},
+        {"name": "MONARFLEX TARP", "expr": "45.5 * base_units * tarp"},
+    ],
+    "C": [
+        {"name": "3M STANDARDS", "expr": "(4/3) * base_units"},
+        {"name": "PFM7", "expr": "4 * base_units"},
+        {"name": "SL7", "expr": "4 * base_units"},
+        {"name": "SBB7", "expr": "0.5 * base_units"},
+        {"name": "GL", "expr": "1.32 * base_units"},
+        {"name": "SBB 1.15", "expr": "0.125 * base_units"},
+        {"name": "SL5", "expr": "1 * base_units"},
+        {"name": 'sbkts 24"', "expr": "1 * base_units"},
+        {"name": "EPP7", "expr": "1 * base_units"},
+        {"name": "MONARFLEX TARP", "expr": "45.5 * base_units * tarp"},
+    ],
+    "D": [
+        {"name": "3M STANDARDS", "expr": "(4/3) * base_units"},
+        {"name": "PFM7", "expr": "4 * base_units"},
+        {"name": "SL7", "expr": "4 * base_units"},
+        {"name": "SBB7", "expr": "0.5 * base_units"},
+        {"name": "GL", "expr": "1.32 * base_units"},
+        {"name": "SBB 1.15", "expr": "0.125 * base_units"},
+        {"name": "DL5", "expr": "1 * base_units"},
+        {"name": "EPP7", "expr": "1 * base_units"},
+        {"name": 'sbkts 24"', "expr": "1 * base_units"},
+        {"name": "MONARFLEX TARP", "expr": "45.5 * base_units * tarp"},
+    ],
+    "F": [
+        {"name": "3M STANDARDS", "expr": "(4/3) * base_units"},
+        {"name": "PFM7", "expr": "1 * base_units"},
+        {"name": "SL7", "expr": "2 * base_units"},
+        {"name": "SBB7", "expr": "0.5 * base_units"},
+        {"name": "GL", "expr": "1.32 * base_units"},
+        {"name": "SBB 1.15", "expr": "0.125 * base_units"},
+        {"name": "1.15 SL", "expr": "1 * base_units"},
+        {"name": "MONARFLEX TARP", "expr": "45.5 * base_units * tarp"},
+    ],
+    "G": [
+        {"name": "3M STANDARDS", "expr": "(4/3) * base_units"},
+        {"name": "PFM7", "expr": "1 * base_units"},
+        {"name": "SL7", "expr": "2 * base_units"},
+        {"name": "SBB7", "expr": "0.5 * base_units"},
+        {"name": "GL", "expr": "1.32 * base_units"},
+        {"name": "SBB 1.15", "expr": "0.125 * base_units"},
+        {"name": "1.15 SL", "expr": "1 * base_units"},
+        {"name": "MONARFLEX TARP", "expr": "45.5 * base_units * tarp"},
+    ],
+    "H": [
+        {"name": "3M STANDARDS", "expr": "(4/3) * base_units"},
+        {"name": "PFM7", "expr": "1 * base_units"},
+        {"name": "SL7", "expr": "2 * base_units"},
+        {"name": "SBB7", "expr": "0.5 * base_units"},
+        {"name": "GL", "expr": "1.32 * base_units"},
+        {"name": "SBB 1.15", "expr": "0.125 * base_units"},
+        {"name": "SL5", "expr": "1 * base_units"},
+    ],
+    "I": [
+        {"name": "3M STANDARDS", "expr": "(4/3) * base_units"},
+        {"name": "PFM7", "expr": "1 * base_units"},
+        {"name": "SL7", "expr": "2 * base_units"},
+        {"name": "SBB7", "expr": "0.5 * base_units"},
+        {"name": "GL", "expr": "1.32 * base_units"},
+        {"name": "SBB 1.15", "expr": "0.125 * base_units"},
+        {"name": "DL5", "expr": "1 * base_units"},
+    ],
+}
+
+
+END_BAY_LEG_RECIPES = {
+    "A": [
+        {"name": "3M STANDARDS", "expr": "(4/3) * end_bay_units"},
+        {"name": "SBB 1.15", "expr": "1 * end_bay_units"},
+        {"name": "1.15 SL", "expr": "5 * end_bay_units"},
+        {"name": "GL", "expr": "1.32 * end_bay_units"},
+        {"name": "EPP 1.15", "expr": "2 * end_bay_units"},
+        {"name": "MONARFLEX TARP", "expr": "45.5 * end_bay_units * tarp"},
+    ],
+    "B": [
+        {"name": "3M STANDARDS", "expr": "(4/3) * end_bay_units"},
+        {"name": "SBB 1.15", "expr": "1 * end_bay_units"},
+        {"name": "1.15 SL", "expr": "4 * end_bay_units"},
+        {"name": "GL", "expr": "1.32 * end_bay_units"},
+        {"name": 'sbkts 24"', "expr": "1 * end_bay_units"},
+        {"name": 'SL 24"', "expr": "4 * end_bay_units"},
+        {"name": 'EPP 24"', "expr": "2 * end_bay_units"},
+        {"name": "MONARFLEX TARP", "expr": "45.5 * end_bay_units * tarp"},
+    ],
+    "C": [
+        {"name": "3M STANDARDS", "expr": "(4/3) * end_bay_units"},
+        {"name": "SBB5", "expr": "1 * end_bay_units"},
+        {"name": "SL5", "expr": "4 * end_bay_units"},
+        {"name": "GL", "expr": "1.32 * end_bay_units"},
+        {"name": 'SL 24"', "expr": "4 * end_bay_units"},
+        {"name": 'EPP 24"', "expr": "2 * end_bay_units"},
+        {"name": 'sbkts 24"', "expr": "1 * end_bay_units"},
+        {"name": "MONARFLEX TARP", "expr": "45.5 * end_bay_units * tarp"},
+    ],
+    "D": [
+        {"name": "3M STANDARDS", "expr": "(4/3) * end_bay_units"},
+        {"name": "SBB5", "expr": "1 * end_bay_units"},
+        {"name": "SL5", "expr": "4 * end_bay_units"},
+        {"name": "GL", "expr": "1.32 * end_bay_units"},
+        {"name": 'SL 24"', "expr": "4 * end_bay_units"},
+        {"name": 'EPP 24"', "expr": "2 * end_bay_units"},
+        {"name": 'sbkts 24"', "expr": "1 * end_bay_units"},
+        {"name": "MONARFLEX TARP", "expr": "45.5 * end_bay_units * tarp"},
+    ],
+    "F": [
+        {"name": "3M STANDARDS", "expr": "(4/3) * end_bay_units"},
+        {"name": "SBB 1.15", "expr": "1 * end_bay_units"},
+        {"name": "1.15 SL", "expr": "1 * end_bay_units"},
+        {"name": "GL", "expr": "1.32 * end_bay_units"},
+    ],
+    "G": [
+        {"name": "3M STANDARDS", "expr": "(4/3) * end_bay_units"},
+        {"name": "SBB 1.15", "expr": "1 * end_bay_units"},
+        {"name": "1.15 SL", "expr": "1 * end_bay_units"},
+        {"name": "GL", "expr": "1.32 * end_bay_units"},
+    ],
+    "H": [
+        {"name": "3M STANDARDS", "expr": "(4/3) * end_bay_units"},
+        {"name": "SBB5", "expr": "1 * end_bay_units"},
+        {"name": "SL5", "expr": "1 * end_bay_units"},
+        {"name": "GL", "expr": "1.32 * end_bay_units"},
+    ],
+    "I": [
+        {"name": "3M STANDARDS", "expr": "(4/3) * end_bay_units"},
+        {"name": "SBB5", "expr": "1 * end_bay_units"},
+        {"name": "DL5", "expr": "1 * end_bay_units"},
+        {"name": "GL", "expr": "1.32 * end_bay_units"},
+    ],
+}
+
+
+DECK_LEVEL_RECIPES = {
+    "G": [
+        {"name": "PFM7", "expr": "3 * deck_level_runs"},
+        {"name": "SL7", "expr": "2 * deck_level_runs"},
+        {"name": "EPP7", "expr": "1 * deck_level_runs"},
+        {"name": 'sbkts 24"', "expr": "1 * deck_level_runs"},
+        {"name": "MONARFLEX TARP", "expr": "45.5 * deck_level_runs * tarp"},
+    ],
+    "H": [
+        {"name": "PFM7", "expr": "4 * deck_level_runs"},
+        {"name": "SL7", "expr": "2 * deck_level_runs"},
+        {"name": "EPP7", "expr": "1 * deck_level_runs"},
+        {"name": 'sbkts 24"', "expr": "1 * deck_level_runs"},
+        {"name": "MONARFLEX TARP", "expr": "45.5 * deck_level_runs * tarp"},
+    ],
+    "I": [
+        {"name": "PFM7", "expr": "4 * deck_level_runs"},
+        {"name": "SL7", "expr": "2 * deck_level_runs"},
+        {"name": "EPP7", "expr": "1 * deck_level_runs"},
+        {"name": 'sbkts 24"', "expr": "1 * deck_level_runs"},
+        {"name": "MONARFLEX TARP", "expr": "45.5 * deck_level_runs * tarp"},
+    ],
+}
+
+
+DECK_LEVEL_END_BAY_RECIPES = {
+    "G": [
+        {"name": "1.15 SL", "expr": "4 * deck_level_end_bay_input"},
+        {"name": "EPP 1.15", "expr": "2 * deck_level_end_bay_input"},
+        {"name": 'sbkts 24"', "expr": "1 * deck_level_end_bay_input"},
+        {"name": 'SL 24"', "expr": "4 * deck_level_end_bay_input"},
+        {"name": 'EPP 24"', "expr": "2 * deck_level_end_bay_input"},
+        {"name": "MONARFLEX TARP", "expr": "45.5 * deck_level_end_bay_input * tarp"},
+    ],
+    "H": [
+        {"name": "SL5", "expr": "4 * deck_level_end_bay_input"},
+        {"name": "EPP5", "expr": "2 * deck_level_end_bay_input"},
+        {"name": 'sbkts 24"', "expr": "1 * deck_level_end_bay_input"},
+        {"name": 'SL 24"', "expr": "4 * deck_level_end_bay_input"},
+        {"name": 'EPP 24"', "expr": "2 * deck_level_end_bay_input"},
+        {"name": "MONARFLEX TARP", "expr": "45.5 * deck_level_end_bay_input * tarp"},
+    ],
+    "I": [
+        {"name": "DL5", "expr": "4 * deck_level_end_bay_input"},
+        {"name": "EPP5", "expr": "2 * deck_level_end_bay_input"},
+        {"name": 'sbkts 24"', "expr": "1 * deck_level_end_bay_input"},
+        {"name": 'SL 24"', "expr": "4 * deck_level_end_bay_input"},
+        {"name": 'EPP 24"', "expr": "2 * deck_level_end_bay_input"},
+        {"name": "MONARFLEX TARP", "expr": "45.5 * deck_level_end_bay_input * tarp"},
+    ],
+}
+
+
+SECTION_ORDER = [
+    "base_unit",
+    "end_bay_leg",
+    "base_out",
+    "base_out_eb",
+    "access_ladder",
+    "tie_in",
+    "top_guard_rail",
+    "top_guard_rail_ends",
+    "deck_level",
+    "deck_level_end_bay",
+    "tarp_canopy",
+    "tarp_canopy_end_bay",
+]
 
 
 def resolved_access_ladder_input(data: Input) -> int:
     return data.access_ladder_input if data.access_ladder_input else data.ladder_bay_input
+
+
+def build_context(data: Input) -> dict:
+    ladder_input = resolved_access_ladder_input(data)
+    return {
+        "length": data.length,
+        "height": data.height,
+        "g3": data.g3,
+        "tarp": data.tarp,
+        "end_bay_leg_input": data.end_bay_leg_input,
+        "base_out_input": data.base_out_input,
+        "base_out_eb_input": data.base_out_eb_input,
+        "access_ladder_input": ladder_input,
+        "tie_in_input": data.tie_in_input,
+        "top_guard_rail_input": data.top_guard_rail_input,
+        "top_guard_rail_ends_input": data.top_guard_rail_ends_input,
+        "top_deck_level_input": data.top_deck_level_input,
+        "deck_level_end_bay_input": data.deck_level_end_bay_input,
+        "base_units": (data.length * data.height) / 45.5,
+        "end_bay_units": (data.height / 6.5) * data.end_bay_leg_input,
+        "deck_level_runs": (data.length / 7.0) * data.top_deck_level_input,
+    }
+
+
+def eval_expr(expr: str, context: dict) -> float:
+    return float(eval(expr, {"__builtins__": {}}, context))
 
 
 def height_engine_total(height: float, cost_per_vertical_ft: float) -> float:
@@ -151,6 +458,15 @@ def height_engine_total(height: float, cost_per_vertical_ft: float) -> float:
             remaining_height -= 6.5
 
     return round(total, 2)
+
+
+def run_equipment_recipe(recipe: list[dict], context: dict) -> dict[str, float]:
+    equipment: dict[str, float] = {}
+    for line in recipe:
+        qty = eval_expr(line["expr"], context)
+        if abs(qty) > 1e-12:
+            equipment[line["name"]] = equipment.get(line["name"], 0.0) + qty
+    return equipment
 
 
 def equipment_rental(equipment: dict[str, float]) -> float:
@@ -197,184 +513,57 @@ def engineering_fee(height: float) -> float:
     return 1650.0 if height > 49 else 0.0
 
 
-# -------------------------
-# Base Unit
-# -------------------------
-def base_unit_equipment(length: float, height: float, tarp: int) -> dict[str, float]:
-    base_units = (length * height) / 45.5
-    return {
-        "3M STANDARDS": 4 * base_units / 3,
-        "PFM7": 2 * base_units,
-        "SL7": 4 * base_units,
-        "SBB7": 0.5 * base_units,
-        "GL": 1.32 * base_units,
-        "EPP7": 1 * base_units,
-        "1.15 SL": 1 * base_units,
-        "SBB 1.15": 1 * base_units,
-        "MONARFLEX TARP": 45.5 * base_units * tarp,
-    }
+def labour_rate_sum(recipe: list[dict], context: dict, include_tarp_quarter: bool = False) -> float:
+    total = 0.0
+    for line in recipe:
+        if line["name"] == "MONARFLEX TARP":
+            continue
+        qty = eval_expr(line["expr"], context)
+        total += qty * LABOUR_RATES.get(line["name"], 0.0)
+
+    if include_tarp_quarter:
+        tarp_qty = next((eval_expr(line["expr"], context) for line in recipe if line["name"] == "MONARFLEX TARP"), 0.0)
+        total += tarp_qty * 0.25
+
+    return total
 
 
-def base_unit_equipment_b(length: float, height: float, tarp: int) -> dict[str, float]:
-    base_units = (length * height) / 45.5
-    return {
-        "3M STANDARDS": (4 / 3) * base_units,
-        "PFM7": 3 * base_units,
-        "SL7": 4 * base_units,
-        "SBB7": 0.5 * base_units,
-        "GL": 1.32 * base_units,
-        "EPP7": 1 * base_units,
-        "1.15 SL": 1 * base_units,
-        "SBB 1.15": 0.5 * base_units,
-        'sbkts 24"': 1 * base_units,
-        "MONARFLEX TARP": 45.5 * base_units * tarp,
-    }
-
-
-def base_unit_labour(length: float, height: float, tarp: int, g3: float) -> float:
-    f15 = (
-        4 * LABOUR_RATES["3M STANDARDS"]
-        + 2 * LABOUR_RATES["PFM7"]
-        + 4 * LABOUR_RATES["SL7"]
-        + 0.5 * LABOUR_RATES["SBB7"]
-        + 1.32 * LABOUR_RATES["GL"]
-        + 1 * LABOUR_RATES["EPP7"]
-        + 1 * LABOUR_RATES["1.15 SL"]
-        + (45.5 * LABOUR_RATES["MONARFLEX TARP"] * tarp)
-    )
-    g16 = 45.5 * 0.25 * tarp
-    g15 = (f15 * g3) + g16
+def labour_base_unit(config: str, context: dict) -> float:
+    recipe = BASE_UNIT_RECIPES[config]
+    labour_per_45_5 = labour_rate_sum(recipe, context, include_tarp_quarter=False)
+    tarp_qty = next((eval_expr(line["expr"], context) for line in recipe if line["name"] == "MONARFLEX TARP"), 0.0)
+    tarp_extra = tarp_qty * 0.25
+    price_per_45_5 = (labour_per_45_5 * context["g3"]) + tarp_extra
 
     total = 0.0
-    remaining_height = height
+    remaining_height = context["height"]
     first = True
-
     while remaining_height >= -45.5:
-        area = remaining_height * length
+        area = remaining_height * context["length"]
         factor = 1.0 if first else 0.7
-        row_value = (area / 45.5) * g15 * factor
-
+        row_value = (area / 45.5) * price_per_45_5 * factor
         if row_value > 0:
             total += row_value
-
         if first:
             remaining_height -= 19.5
             first = False
         else:
             remaining_height -= 6.5
-
     return round(total, 2)
 
 
-def base_unit_labour_b(length: float, height: float, tarp: int, g3: float) -> float:
-    f15 = (
-        4 * LABOUR_RATES["3M STANDARDS"]
-        + 3 * LABOUR_RATES["PFM7"]
-        + 4 * LABOUR_RATES["SL7"]
-        + 0.5 * LABOUR_RATES["SBB7"]
-        + 1.32 * LABOUR_RATES["GL"]
-        + 1 * LABOUR_RATES["EPP7"]
-        + 1 * LABOUR_RATES["1.15 SL"]
-        + 0.5 * LABOUR_RATES["SBB 1.15"]
-        + 1 * LABOUR_RATES['sbkts 24"']
-        + (45.5 * LABOUR_RATES["MONARFLEX TARP"] * tarp)
-    )
-    g16 = 45.5 * 0.25 * tarp
-    g15 = (f15 * g3) + g16
-
-    total = 0.0
-    remaining_height = height
-    first = True
-
-    while remaining_height >= -45.5:
-        area = remaining_height * length
-        factor = 1.0 if first else 0.7
-        row_value = (area / 45.5) * g15 * factor
-
-        if row_value > 0:
-            total += row_value
-
-        if first:
-            remaining_height -= 19.5
-            first = False
-        else:
-            remaining_height -= 6.5
-
-    return round(total, 2)
-
-
-# -------------------------
-# End Bay Leg
-# -------------------------
-def end_bay_leg_units(height: float, end_bay_leg_input: int) -> float:
-    return (height / 6.5) * end_bay_leg_input
-
-
-def end_bay_leg_equipment(height: float, end_bay_leg_input: int, tarp: int) -> dict[str, float]:
-    units = end_bay_leg_units(height, end_bay_leg_input)
-    return {
-        "3M STANDARDS": (4 / 3) * units,
-        "SBB 1.15": 1 * units,
-        "1.15 SL": 5 * units,
-        "GL": 1.32 * units,
-        "EPP 1.15": 2 * units,
-        "MONARFLEX TARP": height * tarp * end_bay_leg_input,
-    }
-
-
-def end_bay_leg_equipment_b(height: float, end_bay_leg_input: int, tarp: int) -> dict[str, float]:
-    units = end_bay_leg_units(height, end_bay_leg_input)
-    return {
-        "3M STANDARDS": (4 / 3) * units,
-        "SBB 1.15": 1 * units,
-        "1.15 SL": 4 * units,
-        "GL": 1.32 * units,
-        "EPP 1.15": 0 * units,
-        'SL 24"': 4 * units,
-        'EPP 24"': 2 * units,
-        'sbkts 24"': 1 * units,
-        "MONARFLEX TARP": height * tarp * end_bay_leg_input,
-    }
-
-
-def end_bay_leg_labour(height: float, end_bay_leg_input: int, tarp: int, g3: float) -> float:
-    f84 = (
-        4 * LABOUR_RATES["3M STANDARDS"]
-        + 1 * LABOUR_RATES["SBB 1.15"]
-        + 5 * LABOUR_RATES["1.15 SL"]
-        + 1.32 * LABOUR_RATES["GL"]
-        + 2 * LABOUR_RATES["EPP 1.15"]
-        + 45.5 * LABOUR_RATES["MONARFLEX TARP"] * tarp
-    )
-    g84 = f84 * g3
-    units = end_bay_leg_units(height, end_bay_leg_input)
-    cost_per_vertical_ft = (units * g84) / height
-    return height_engine_total(height, cost_per_vertical_ft)
-
-def end_bay_leg_labour_b(height: float, end_bay_leg_input: int, tarp: int, g3: float) -> float:
-    f84 = (
-        4 * LABOUR_RATES["3M STANDARDS"]
-        + 1 * LABOUR_RATES["SBB 1.15"]
-        + 4 * LABOUR_RATES["1.15 SL"]
-        + 1.32 * LABOUR_RATES["GL"]
-        + 0 * LABOUR_RATES["EPP 1.15"]
-        + 4 * LABOUR_RATES['SL 24"']
-        + 2 * LABOUR_RATES['EPP 24"']
-        + 1 * LABOUR_RATES['sbkts 24"']
-        + 45.5 * LABOUR_RATES["MONARFLEX TARP"] * tarp
-    )
-    g84 = f84 * g3
-    units = end_bay_leg_units(height, end_bay_leg_input)
-
-    if height <= 0:
+def labour_vertical_height_engine(recipe: list[dict], context: dict, driver_value: float) -> float:
+    if context["height"] <= 0 or driver_value <= 0:
         return 0.0
+    labour_per_unit = labour_rate_sum(recipe, context, include_tarp_quarter=True) * context["g3"]
+    cost_per_vertical_ft = (driver_value * labour_per_unit) / context["height"]
+    return height_engine_total(context["height"], cost_per_vertical_ft)
 
-    cost_per_vertical_ft = (units * g84) / height
-    return height_engine_total(height, cost_per_vertical_ft)
 
-# -------------------------
-# Base Out
-# -------------------------
+def labour_direct_recipe(recipe: list[dict], context: dict, multiplier: float) -> float:
+    return round(labour_rate_sum(recipe, context, include_tarp_quarter=False) * context["g3"] * multiplier, 2)
+
+
 def base_out_equipment(base_out_input: int) -> dict[str, float]:
     return {
         "PFM7": 22 * base_out_input,
@@ -390,9 +579,6 @@ def base_out_labour(length: float, base_out_input: int) -> float:
     return round((length / 7) * 95 * base_out_input, 2)
 
 
-# -------------------------
-# Base Out EB
-# -------------------------
 def base_out_eb_equipment(base_out_eb_input: int) -> dict[str, float]:
     return {
         "1.15 SL": 1 * base_out_eb_input,
@@ -412,9 +598,6 @@ def base_out_eb_labour(base_out_eb_input: int, g3: float) -> float:
     return round(f144 * g3 * base_out_eb_input, 2)
 
 
-# -------------------------
-# Access Ladder
-# -------------------------
 def access_ladder_units(height: float, access_ladder_input: int) -> float:
     return (height / 6.5) * access_ladder_input
 
@@ -434,15 +617,13 @@ def access_ladder_equipment(height: float, access_ladder_input: int) -> dict[str
 def access_ladder_labour(height: float, access_ladder_input: int, g3: float) -> float:
     f153 = 35.5
     g155 = f153 * g3
-
     units = access_ladder_units(height, access_ladder_input)
+    if height <= 0:
+        return 0.0
     cost_per_vertical_ft = (units * g155) / height
     return height_engine_total(height, cost_per_vertical_ft)
 
 
-# -------------------------
-# Tie In
-# -------------------------
 def tie_in_locations(length: float, height: float, tie_in_input: int) -> float:
     base_units = (length * height) / 45.5
     return ((base_units / 2) + (height / 13)) * tie_in_input
@@ -459,23 +640,17 @@ def tie_in_equipment(length: float, height: float, tie_in_input: int) -> dict[st
 
 def tie_in_labour(length: float, height: float, tie_in_input: int, g3: float) -> float:
     locations = tie_in_locations(length, height, tie_in_input)
-
     if height <= 0:
         return 0.0
-
     f_tie = 20.0
     g_tie = f_tie * g3
     cost_per_vertical_ft = (locations * g_tie) / height
     return height_engine_total(height, cost_per_vertical_ft)
 
 
-# -------------------------
-# Top Guard Rail
-# -------------------------
 def top_guard_rail_equipment(length: float, top_guard_rail_input: int) -> dict[str, float]:
     runs = length / 7
     driver = runs * top_guard_rail_input
-
     return {
         "3M STANDARDS": driver / 3,
         "SL7": 2 * driver,
@@ -486,7 +661,6 @@ def top_guard_rail_equipment(length: float, top_guard_rail_input: int) -> dict[s
 
 def top_guard_rail_labour(length: float, height: float, top_guard_rail_input: int, g3: float) -> float:
     bays = (length / 7) * top_guard_rail_input
-
     f_top_gr = (
         1 * LABOUR_RATES["3M STANDARDS"]
         + 2 * LABOUR_RATES["SL7"]
@@ -494,23 +668,14 @@ def top_guard_rail_labour(length: float, height: float, top_guard_rail_input: in
         + 0.33 * LABOUR_RATES["GL"]
     )
     g_top_gr = f_top_gr * g3
-
     if height <= 0:
         return 0.0
-
     cost_per_vertical_ft = (bays * g_top_gr) / height
     return height_engine_total(height, cost_per_vertical_ft)
 
 
-# -------------------------
-# Top Guard Rail Ends
-# -------------------------
-def top_guard_rail_ends_units(top_guard_rail_ends_input: int) -> float:
-    return float(top_guard_rail_ends_input)
-
-
 def top_guard_rail_ends_equipment(top_guard_rail_ends_input: int) -> dict[str, float]:
-    units = top_guard_rail_ends_units(top_guard_rail_ends_input)
+    units = float(top_guard_rail_ends_input)
     return {
         "3M STANDARDS": 1 * units,
         "1.15 SL": 4 * units,
@@ -520,8 +685,7 @@ def top_guard_rail_ends_equipment(top_guard_rail_ends_input: int) -> dict[str, f
 
 
 def top_guard_rail_ends_labour(height: float, top_guard_rail_ends_input: int, g3: float) -> float:
-    units = top_guard_rail_ends_units(top_guard_rail_ends_input)
-
+    units = float(top_guard_rail_ends_input)
     f_top_gr_ends = (
         3 * LABOUR_RATES["3M STANDARDS"]
         + 4 * LABOUR_RATES["1.15 SL"]
@@ -529,17 +693,12 @@ def top_guard_rail_ends_labour(height: float, top_guard_rail_ends_input: int, g3
         + 1 * LABOUR_RATES["GL"]
     )
     g_top_gr_ends = f_top_gr_ends * g3
-
     if height <= 0:
         return 0.0
-
     cost_per_vertical_ft = (units * g_top_gr_ends) / height
     return height_engine_total(height, cost_per_vertical_ft)
 
 
-# -------------------------
-# Tarp & Canopy
-# -------------------------
 def tarp_canopy_runs(length: float, tarp: int) -> float:
     return (length / 7) * tarp
 
@@ -556,11 +715,9 @@ def tarp_canopy_equipment(length: float, height: float, tarp: int) -> dict[str, 
     runs = tarp_canopy_runs(length, tarp)
     base_ties = tarp_canopy_base_ties(length, height, tarp)
     end_bay_ties = tarp_canopy_end_bay_ties(height, tarp)
-
     sl7_qty = base_ties + (4 * runs) + end_bay_ties
     cttra_qty = ((((length * height) / 91) + (height / 13)) * 2 * tarp) + ((length / 7) * 2 * tarp)
     eye_bolt_qty = sl7_qty
-
     return {
         "3M STANDARDS": (4 / 3) * runs,
         "PFM7": 4 * runs,
@@ -581,15 +738,11 @@ def tarp_canopy_equipment(length: float, height: float, tarp: int) -> dict[str, 
 def tarp_canopy_labour(length: float, height: float, tarp: int) -> float:
     if height <= 0 or tarp <= 0:
         return 0.0
-
     top_driver = (length / 7) * (150 * tarp)
     cost_per_vertical_ft = top_driver / height
     return height_engine_total(height, cost_per_vertical_ft)
 
 
-# -------------------------
-# Tarp & Canopy End Bay
-# -------------------------
 def tarp_canopy_end_bay_equipment(tarp: int) -> dict[str, float]:
     driver = float(tarp)
     return {
@@ -617,169 +770,111 @@ def tarp_canopy_end_bay_labour(height: float, tarp: int, g3: float) -> float:
         + 2 * LABOUR_RATES["T2 TUBE"]
         + 300 * LABOUR_RATES["MONARFLEX TARP"]
     )
-
     g_tceb = f_tceb * g3
-
     if height <= 0:
         return 0.0
-
     cost_per_vertical_ft = (tarp * g_tceb) / height
     return height_engine_total(height, cost_per_vertical_ft)
 
 
-# -------------------------
-# Future Repeatable Units
-# -------------------------
-def vertical_repeatable_equipment() -> dict[str, float]:
-    return {}
+def deck_level_equipment(config: str, context: dict) -> dict[str, float]:
+    if config not in DECK_LEVEL_CONFIGS or context["top_deck_level_input"] <= 0:
+        return {}
+    return run_equipment_recipe(DECK_LEVEL_RECIPES[config], context)
 
 
-def vertical_repeatable_labour() -> float:
-    return 0.0
+def deck_level_labour(config: str, context: dict) -> float:
+    if config not in DECK_LEVEL_CONFIGS or context["top_deck_level_input"] <= 0:
+        return 0.0
+    return labour_vertical_height_engine(DECK_LEVEL_RECIPES[config], context, context["deck_level_runs"])
 
 
-def horizontal_repeatable_equipment() -> dict[str, float]:
-    return {}
+def deck_level_end_bay_equipment(config: str, context: dict) -> dict[str, float]:
+    if config not in DECK_LEVEL_CONFIGS or context["deck_level_end_bay_input"] <= 0:
+        return {}
+    return run_equipment_recipe(DECK_LEVEL_END_BAY_RECIPES[config], context)
 
 
-def horizontal_repeatable_labour() -> float:
-    return 0.0
+def deck_level_end_bay_labour(config: str, context: dict) -> float:
+    if config not in DECK_LEVEL_CONFIGS or context["deck_level_end_bay_input"] <= 0:
+        return 0.0
+    return labour_vertical_height_engine(
+        DECK_LEVEL_END_BAY_RECIPES[config],
+        context,
+        context["deck_level_end_bay_input"],
+    )
 
 
-# -------------------------
-# Equipment Recipe Registry
-# -------------------------
-EQUIPMENT_RECIPES = {
-    "A": {
-        "base_unit": base_unit_equipment,
-        "end_bay_leg": end_bay_leg_equipment,
-        "base_out": base_out_equipment,
-        "base_out_eb": base_out_eb_equipment,
-        "access_ladder": access_ladder_equipment,
-        "tie_in": tie_in_equipment,
-        "top_guard_rail": top_guard_rail_equipment,
-        "top_guard_rail_ends": top_guard_rail_ends_equipment,
-        "tarp_canopy": tarp_canopy_equipment,
-        "tarp_canopy_end_bay": tarp_canopy_end_bay_equipment,
-        "vertical_repeatable": vertical_repeatable_equipment,
-        "horizontal_repeatable": horizontal_repeatable_equipment,
-    },
-    "B": {
-        "base_unit": base_unit_equipment_b,
-        "end_bay_leg": end_bay_leg_equipment_b,
-        "base_out": base_out_equipment,
-        "base_out_eb": base_out_eb_equipment,
-        "access_ladder": access_ladder_equipment,
-        "tie_in": tie_in_equipment,
-        "top_guard_rail": top_guard_rail_equipment,
-        "top_guard_rail_ends": top_guard_rail_ends_equipment,
-        "tarp_canopy": tarp_canopy_equipment,
-        "tarp_canopy_end_bay": tarp_canopy_end_bay_equipment,
-        "vertical_repeatable": vertical_repeatable_equipment,
-        "horizontal_repeatable": horizontal_repeatable_equipment,
-    },
-}
+def build_standard_estimate(data: Input) -> dict:
+    config = data.config.upper()
+    if config not in STANDARD_CONFIGS:
+        raise ValueError(f"Unsupported config: {config}")
 
-# -------------------------
-# Labour Recipe Registry
-# -------------------------
-LABOUR_RECIPES = {
-    "A": {
-        "base_unit": base_unit_labour,
-        "end_bay_leg": end_bay_leg_labour,
-    },
-    "B": {
-        "base_unit": base_unit_labour_b,
-        "end_bay_leg": end_bay_leg_labour_b,
-    },
-}
-
-
-def build_estimate_config_a(data: Input) -> dict:
-    sections = {}
     ladder_input = resolved_access_ladder_input(data)
+    context = build_context(data)
+    sections: dict[str, dict] = {}
 
-    base_eq = EQUIPMENT_RECIPES[data.config.upper()]["base_unit"](
-        data.length, data.height, data.tarp
-    )
     sections["base_unit"] = make_section(
-        base_eq,
-        LABOUR_RECIPES[data.config.upper()]["base_unit"](
-            data.length, data.height, data.tarp, data.g3
-        ),
+        run_equipment_recipe(BASE_UNIT_RECIPES[config], context),
+        labour_base_unit(config, context),
     )
 
-    ebl_eq = EQUIPMENT_RECIPES[data.config.upper()]["end_bay_leg"](
-        data.height, data.end_bay_leg_input, data.tarp
-    )
     sections["end_bay_leg"] = make_section(
-    ebl_eq,
-    LABOUR_RECIPES[data.config.upper()]["end_bay_leg"](
-        data.height, data.end_bay_leg_input, data.tarp, data.g3
-    ),
-)
-    bo_eq = base_out_equipment(data.base_out_input)
+        run_equipment_recipe(END_BAY_LEG_RECIPES[config], context),
+        labour_vertical_height_engine(END_BAY_LEG_RECIPES[config], context, context["end_bay_units"]),
+    )
+
     sections["base_out"] = make_section(
-        bo_eq,
+        base_out_equipment(data.base_out_input),
         base_out_labour(data.length, data.base_out_input),
     )
 
-    boeb_eq = base_out_eb_equipment(data.base_out_eb_input)
     sections["base_out_eb"] = make_section(
-        boeb_eq,
+        base_out_eb_equipment(data.base_out_eb_input),
         base_out_eb_labour(data.base_out_eb_input, data.g3),
     )
 
-    al_eq = access_ladder_equipment(data.height, ladder_input)
     sections["access_ladder"] = make_section(
-        al_eq,
+        access_ladder_equipment(data.height, ladder_input),
         access_ladder_labour(data.height, ladder_input, data.g3),
     )
 
-    tie_eq = tie_in_equipment(data.length, data.height, data.tie_in_input)
     sections["tie_in"] = make_section(
-        tie_eq,
+        tie_in_equipment(data.length, data.height, data.tie_in_input),
         tie_in_labour(data.length, data.height, data.tie_in_input, data.g3),
     )
 
-    top_gr_eq = top_guard_rail_equipment(data.length, data.top_guard_rail_input)
     sections["top_guard_rail"] = make_section(
-        top_gr_eq,
+        top_guard_rail_equipment(data.length, data.top_guard_rail_input),
         top_guard_rail_labour(data.length, data.height, data.top_guard_rail_input, data.g3),
     )
 
-    top_gr_ends_eq = top_guard_rail_ends_equipment(data.top_guard_rail_ends_input)
     sections["top_guard_rail_ends"] = make_section(
-        top_gr_ends_eq,
+        top_guard_rail_ends_equipment(data.top_guard_rail_ends_input),
         top_guard_rail_ends_labour(data.height, data.top_guard_rail_ends_input, data.g3),
     )
 
-    tarp_ca_eq = tarp_canopy_equipment(data.length, data.height, data.tarp)
+    sections["deck_level"] = make_section(
+        deck_level_equipment(config, context),
+        deck_level_labour(config, context),
+    )
+
+    sections["deck_level_end_bay"] = make_section(
+        deck_level_end_bay_equipment(config, context),
+        deck_level_end_bay_labour(config, context),
+    )
+
     sections["tarp_canopy"] = make_section(
-        tarp_ca_eq,
+        tarp_canopy_equipment(data.length, data.height, data.tarp),
         tarp_canopy_labour(data.length, data.height, data.tarp),
     )
 
-    tceb_eq = tarp_canopy_end_bay_equipment(data.tarp)
     sections["tarp_canopy_end_bay"] = make_section(
-        tceb_eq,
+        tarp_canopy_end_bay_equipment(data.tarp),
         tarp_canopy_end_bay_labour(data.height, data.tarp, data.g3),
     )
 
-    vr_eq = vertical_repeatable_equipment()
-    sections["vertical_repeatable"] = make_section(
-        vr_eq,
-        vertical_repeatable_labour(),
-    )
-
-    hr_eq = horizontal_repeatable_equipment()
-    sections["horizontal_repeatable"] = make_section(
-        hr_eq,
-        horizontal_repeatable_labour(),
-    )
-
     combined_eq = combine_equipment(*(section["equipment"] for section in sections.values()))
-
     total_rental = round(sum(section["rental"] for section in sections.values()), 2)
     total_consumables = round(sum(section["consumables"] for section in sections.values()), 2)
     total_labour = round(sum(section["labour"] for section in sections.values()), 2)
@@ -794,8 +889,8 @@ def build_estimate_config_a(data: Input) -> dict:
 
     return {
         "config": {
-            "selected": data.config.upper(),
-            "metadata": CONFIG_METADATA[data.config.upper()],
+            "selected": config,
+            "metadata": CONFIG_METADATA[config],
         },
         "inputs": response_inputs,
         "equipment_list": build_equipment_list(combined_eq),
@@ -819,20 +914,11 @@ def build_estimate_config_a(data: Input) -> dict:
     }
 
 
-def build_estimate_config_b(data: Input) -> dict:
-    return build_estimate_config_a(data)
-
-
 def build_estimate(data: Input) -> dict:
     config = data.config.upper()
-
-    if config == "A":
-        return build_estimate_config_a(data)
-
-    if config == "B":
-        return build_estimate_config_b(data)
-
-    raise ValueError(f"Unsupported config: {config}")
+    if config not in STANDARD_CONFIGS:
+        raise ValueError(f"Unsupported config: {config}")
+    return build_standard_estimate(data)
 
 
 @app.get("/")
@@ -846,7 +932,7 @@ def root():
 @app.get("/configs")
 def get_configs():
     return {
-        "configs": CONFIG_METADATA
+        "configs": CONFIG_METADATA,
     }
 
 
