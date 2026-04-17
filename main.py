@@ -851,11 +851,20 @@ def access_ladder_equipment(height: float, access_ladder_input: int) -> dict[str
         "LBB42": 1 * units,
         "TRAP DOOR": 1 * units,
         "PFM 1.15": 1 * units,
+        "PFM7": -0.5 * units,
     }
 
 
 def access_ladder_labour(height: float, access_ladder_input: int, g3: float) -> float:
-    f153 = 35.5
+    f153 = (
+        1 * LABOUR_RATES["AC10"]
+        + 2 * LABOUR_RATES["CTTRA"]
+        + 1 * LABOUR_RATES["LBB42"]
+        + 1 * LABOUR_RATES["TRAP DOOR"]
+        - 0.5 * LABOUR_RATES["PFM7"]
+        + 1 * LABOUR_RATES["PFM 1.15"]
+        + 1 * LABOUR_RATES["1.15 SL"]
+    )
     g155 = f153 * g3
     units = access_ladder_units(height, access_ladder_input)
     if height <= 0:
