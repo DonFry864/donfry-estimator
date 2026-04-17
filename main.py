@@ -351,6 +351,26 @@ def end_bay_leg_labour(height: float, end_bay_leg_input: int, tarp: int, g3: flo
     cost_per_vertical_ft = (units * g84) / height
     return height_engine_total(height, cost_per_vertical_ft)
 
+def end_bay_leg_labour_b(height: float, end_bay_leg_input: int, tarp: int, g3: float) -> float:
+    f84 = (
+        4 * LABOUR_RATES["3M STANDARDS"]
+        + 1 * LABOUR_RATES["SBB 1.15"]
+        + 4 * LABOUR_RATES["1.15 SL"]
+        + 1.32 * LABOUR_RATES["GL"]
+        + 0 * LABOUR_RATES["EPP 1.15"]
+        + 4 * LABOUR_RATES['SL 24"']
+        + 2 * LABOUR_RATES['EPP 24"']
+        + 1 * LABOUR_RATES['sbkts 24"']
+        + 45.5 * LABOUR_RATES["MONARFLEX TARP"] * tarp
+    )
+    g84 = f84 * g3
+    units = end_bay_leg_units(height, end_bay_leg_input)
+
+    if height <= 0:
+        return 0.0
+
+    cost_per_vertical_ft = (units * g84) / height
+    return height_engine_total(height, cost_per_vertical_ft)
 
 # -------------------------
 # Base Out
@@ -666,9 +686,11 @@ EQUIPMENT_RECIPES = {
 LABOUR_RECIPES = {
     "A": {
         "base_unit": base_unit_labour,
+        "end_bay_leg": end_bay_leg_labour,
     },
     "B": {
         "base_unit": base_unit_labour_b,
+        "end_bay_leg": end_bay_leg_labour_b,
     },
 }
 
@@ -691,10 +713,11 @@ def build_estimate_config_a(data: Input) -> dict:
         data.height, data.end_bay_leg_input, data.tarp
     )
     sections["end_bay_leg"] = make_section(
-        ebl_eq,
-        end_bay_leg_labour(data.height, data.end_bay_leg_input, data.tarp, data.g3),
-    )
-
+    ebl_eq,
+    LABOUR_RECIPES[data.config.upper()]["end_bay_leg"](
+        data.height, data.end_bay_leg_input, data.tarp, data.g3
+    ),
+)
     bo_eq = base_out_equipment(data.base_out_input)
     sections["base_out"] = make_section(
         bo_eq,
