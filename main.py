@@ -851,11 +851,14 @@ def access_ladder_equipment(height: float, access_ladder_input: int) -> dict[str
         "LBB42": 1 * units,
         "TRAP DOOR": 1 * units,
         "PFM 1.15": 1 * units,
-        "PFM7": -0.5 * units,
+        "SL7": -0.5 * units,
     }
 
 
 def access_ladder_labour(height: float, access_ladder_input: int, g3: float) -> float:
+    if height <= 0:
+        return 0.0
+
     f153 = (
         1 * LABOUR_RATES["AC10"]
         + 2 * LABOUR_RATES["CTTRA"]
@@ -866,10 +869,7 @@ def access_ladder_labour(height: float, access_ladder_input: int, g3: float) -> 
         + 1 * LABOUR_RATES["1.15 SL"]
     )
     g155 = f153 * g3
-    units = access_ladder_units(height, access_ladder_input)
-    if height <= 0:
-        return 0.0
-    cost_per_vertical_ft = (units * g155) / height
+    cost_per_vertical_ft = g155 / 6.5
     return height_engine_total(height, cost_per_vertical_ft)
 
 
