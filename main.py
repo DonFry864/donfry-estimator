@@ -194,7 +194,7 @@ BASE_UNIT_RECIPES = {
         {"name": "GL", "expr": "1.32 * base_units"},
         {"name": "EPP7", "expr": "1 * base_units"},
         {"name": "1.15 SL", "expr": "1 * base_units"},
-        {"name": "SBB 1.15", "expr": "0.5 * base_units"},
+        {"name": "SBB 1.15", "expr": "1 * base_units"},
         {"name": "MONARFLEX TARP", "expr": "45.5 * base_units * tarp"},
     ],
     "B": [
@@ -283,7 +283,7 @@ BASE_UNIT_LABOUR_RECIPES = {
         {"name": "GL", "qty": 1.32},
         {"name": "EPP7", "qty": 1},
         {"name": "1.15 SL", "qty": 1},
-        {"name": "SBB 1.15", "qty": 0.5},
+        {"name": "SBB 1.15", "qty": 1},
     ],
     "B": [
         {"name": "3M STANDARDS", "qty": 4},
@@ -292,7 +292,7 @@ BASE_UNIT_LABOUR_RECIPES = {
         {"name": "SBB7", "qty": 0.5},
         {"name": "GL", "qty": 1.32},
         {"name": "EPP7", "qty": 1},
-        {"name": "1.15 SL", "qty": 1},
+        {"name": "1.15 SL", "qty": 0.5},
         {"name": "SBB 1.15", "qty": 0.5},
         {"name": 'sbkts 24"', "qty": 1},
     ],
@@ -720,8 +720,7 @@ def labour_base_unit(config: str, context: dict) -> float:
             + 0.5 * LABOUR_RATES["SBB7"]
             + 1.32 * LABOUR_RATES["GL"]
             + 1 * LABOUR_RATES["EPP7"]
-            + 1 * LABOUR_RATES["1.15 SL"]
-            + 0.5 * LABOUR_RATES["SBB 1.15"]
+            + 0.5 * LABOUR_RATES["1.15 SL"]
             + (45.5 * LABOUR_RATES["MONARFLEX TARP"] * context["tarp"])
         )
         g16 = 45.5 * 0.25 * context["tarp"]
