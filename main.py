@@ -720,7 +720,7 @@ def labour_base_unit(config: str, context: dict) -> float:
             + 1.32 * LABOUR_RATES["GL"]
             + 1 * LABOUR_RATES["EPP7"]
             + 1 * LABOUR_RATES["1.15 SL"]
-            + 0.5 * LABOUR_RATES["SBB 1.15"]
+           + 0.5 * 1.25* LABOUR_RATES["SBB 1.15"]
             + (45.5 * LABOUR_RATES["MONARFLEX TARP"] * context["tarp"])
         )
         g16 = 45.5 * 0.25 * context["tarp"]
@@ -733,7 +733,7 @@ def labour_base_unit(config: str, context: dict) -> float:
             + 1.32 * LABOUR_RATES["GL"]
             + 1 * LABOUR_RATES["EPP7"]
             + 1 * LABOUR_RATES["1.15 SL"]
-            + 0.5 * LABOUR_RATES["SBB 1.15"]
+            + 0.5 * 1.25* LABOUR_RATES["SBB 1.15"]
             + 1 * LABOUR_RATES['sbkts 24"']
             + (45.5 * LABOUR_RATES["MONARFLEX TARP"] * context["tarp"])
         )
