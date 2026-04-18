@@ -194,7 +194,7 @@ BASE_UNIT_RECIPES = {
         {"name": "GL", "expr": "1.32 * base_units"},
         {"name": "EPP7", "expr": "1 * base_units"},
         {"name": "1.15 SL", "expr": "1 * base_units"},
-        {"name": "SBB 1.15", "expr": "0.5 * base_units"},
+        {"name": "SBB 1.15", "expr": "1 * base_units"},
         {"name": "MONARFLEX TARP", "expr": "45.5 * base_units * tarp"},
     ],
     "B": [
