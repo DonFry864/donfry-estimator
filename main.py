@@ -851,7 +851,7 @@ def access_ladder_equipment(height: float, access_ladder_input: int) -> dict[str
         "LBB42": 1 * units,
         "TRAP DOOR": 1 * units,
         "PFM 1.15": 1 * units,
-        "SL7": -0.5 * units,
+        "PFM7": -0.5 * units,
     }
 
 
