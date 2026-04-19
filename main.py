@@ -1,3 +1,9 @@
+# V16
+# End bay leg tarp correction from workbook:
+# - use 91 sq ft per vertical level for END_BAY_LEG tarp, not 45.5
+# - apply same correction to labour_end_bay_leg subtotal and tarp add-on
+# - shared logic retained; recipes still drive config differences
+#
 # V15 NORMALIZED
 # Shared calculation logic preserved from Config A.
 # Other configs differ by recipes/section presence only.
@@ -435,7 +441,7 @@ END_BAY_LEG_RECIPES = {
         {"name": "1.15 SL", "expr": "5 * end_bay_units"},
         {"name": "GL", "expr": "1.32 * end_bay_units"},
         {"name": "EPP 1.15", "expr": "2 * end_bay_units"},
-        {"name": "MONARFLEX TARP", "expr": "45.5 * end_bay_units * tarp"},
+        {"name": "MONARFLEX TARP", "expr": "91 * end_bay_units * tarp"},
     ],
     "B": [
         {"name": "3M STANDARDS", "expr": "(4/3) * end_bay_units"},
@@ -445,7 +451,7 @@ END_BAY_LEG_RECIPES = {
         {"name": 'sbkts 24"', "expr": "1 * end_bay_units"},
         {"name": 'SL 24"', "expr": "4 * end_bay_units"},
         {"name": 'EPP 24"', "expr": "2 * end_bay_units"},
-        {"name": "MONARFLEX TARP", "expr": "45.5 * end_bay_units * tarp"},
+        {"name": "MONARFLEX TARP", "expr": "91 * end_bay_units * tarp"},
     ],
     "C": [
         {"name": "3M STANDARDS", "expr": "(4/3) * end_bay_units"},
@@ -455,7 +461,7 @@ END_BAY_LEG_RECIPES = {
         {"name": 'SL 24"', "expr": "4 * end_bay_units"},
         {"name": 'EPP 24"', "expr": "2 * end_bay_units"},
         {"name": 'sbkts 24"', "expr": "1 * end_bay_units"},
-        {"name": "MONARFLEX TARP", "expr": "45.5 * end_bay_units * tarp"},
+        {"name": "MONARFLEX TARP", "expr": "91 * end_bay_units * tarp"},
     ],
     "D": [
         {"name": "3M STANDARDS", "expr": "(4/3) * end_bay_units"},
@@ -465,7 +471,7 @@ END_BAY_LEG_RECIPES = {
         {"name": 'SL 24"', "expr": "4 * end_bay_units"},
         {"name": 'EPP 24"', "expr": "2 * end_bay_units"},
         {"name": 'sbkts 24"', "expr": "1 * end_bay_units"},
-        {"name": "MONARFLEX TARP", "expr": "45.5 * end_bay_units * tarp"},
+        {"name": "MONARFLEX TARP", "expr": "91 * end_bay_units * tarp"},
     ],
     "F": [
         {"name": "3M STANDARDS", "expr": "(4/3) * end_bay_units"},
@@ -484,14 +490,14 @@ END_BAY_LEG_RECIPES = {
         {"name": "SBB5", "expr": "1 * end_bay_units"},
         {"name": "SL5", "expr": "1 * end_bay_units"},
         {"name": "GL", "expr": "1.32 * end_bay_units"},
-        {"name": "MONARFLEX TARP", "expr": "45.5 * end_bay_units * tarp"},
+        {"name": "MONARFLEX TARP", "expr": "91 * end_bay_units * tarp"},
     ],
     "I": [
         {"name": "3M STANDARDS", "expr": "(4/3) * end_bay_units"},
         {"name": "SBB5", "expr": "1 * end_bay_units"},
         {"name": "DL5", "expr": "1 * end_bay_units"},
         {"name": "GL", "expr": "1.32 * end_bay_units"},
-        {"name": "MONARFLEX TARP", "expr": "45.5 * end_bay_units * tarp"},
+        {"name": "MONARFLEX TARP", "expr": "91 * end_bay_units * tarp"},
     ],
 }
 
@@ -803,9 +809,9 @@ def labour_end_bay_leg(config: str, context: dict) -> float:
         return 0.0
 
     f84 = recipe_qty_sum(END_BAY_LEG_LABOUR_RECIPES[config])
-    f84 += 45.5 * LABOUR_RATES["MONARFLEX TARP"] * context["tarp"]
+    f84 += 91 * LABOUR_RATES["MONARFLEX TARP"] * context["tarp"]
 
-    g84 = f84 * context["g3"]
+    g84 = f84 + (91 * 0.25 * context["tarp"])
     units = context["end_bay_units"]
     cost_per_vertical_ft = (units * g84) / context["height"]
 
