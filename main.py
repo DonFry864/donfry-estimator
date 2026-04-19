@@ -1,3 +1,10 @@
+# V17
+# Corrected shared END BAY LEG logic from revised workbook:
+# - END BAY LEG tarp quantity = 91 * end_bay_units * tarp
+# - END BAY LEG labour F84 includes 91 * 0.5 * tarp
+# - END BAY LEG labour G84 adds another 91 * 0.5 * tarp (no g3 multiplier)
+# - Config B END BAY LEG equipment now includes EPP 1.15, matching the corrected recipe
+#
 # V16
 # End bay leg tarp correction from workbook:
 # - use 91 sq ft per vertical level for END_BAY_LEG tarp, not 45.5
@@ -448,6 +455,7 @@ END_BAY_LEG_RECIPES = {
         {"name": "SBB 1.15", "expr": "1 * end_bay_units"},
         {"name": "1.15 SL", "expr": "4 * end_bay_units"},
         {"name": "GL", "expr": "1.32 * end_bay_units"},
+        {"name": "EPP 1.15", "expr": "2 * end_bay_units"},
         {"name": 'sbkts 24"', "expr": "1 * end_bay_units"},
         {"name": 'SL 24"', "expr": "4 * end_bay_units"},
         {"name": 'EPP 24"', "expr": "2 * end_bay_units"},
@@ -811,7 +819,7 @@ def labour_end_bay_leg(config: str, context: dict) -> float:
     f84 = recipe_qty_sum(END_BAY_LEG_LABOUR_RECIPES[config])
     f84 += 91 * LABOUR_RATES["MONARFLEX TARP"] * context["tarp"]
 
-    g84 = f84 + (91 * 0.25 * context["tarp"])
+    g84 = f84 + (91 * LABOUR_RATES["MONARFLEX TARP"] * context["tarp"])
     units = context["end_bay_units"]
     cost_per_vertical_ft = (units * g84) / context["height"]
 
