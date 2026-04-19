@@ -1,3 +1,5 @@
+# V12 - Config B end bay tarp logic fixed; Config B end bay labour adds EPP 1.15 only in labour recipe.
+
 from collections import defaultdict
 from fastapi import FastAPI
 from pydantic import BaseModel
@@ -369,6 +371,7 @@ END_BAY_LEG_LABOUR_RECIPES = {
         {"name": "SBB 1.15", "qty": 1},
         {"name": "1.15 SL", "qty": 4},
         {"name": "GL", "qty": 1.32},
+        {"name": "EPP 1.15", "qty": 2},
         {"name": 'SL 24"', "qty": 4},
         {"name": 'EPP 24"', "qty": 2},
         {"name": 'sbkts 24"', "qty": 1},
@@ -435,7 +438,7 @@ END_BAY_LEG_RECIPES = {
         {"name": 'sbkts 24"', "expr": "1 * end_bay_units"},
         {"name": 'SL 24"', "expr": "4 * end_bay_units"},
         {"name": 'EPP 24"', "expr": "2 * end_bay_units"},
-        {"name": "MONARFLEX TARP", "expr": "height * tarp * end_bay_leg_input"},
+        {"name": "MONARFLEX TARP", "expr": "45.5 * end_bay_units * tarp"},
     ],
     "C": [
         {"name": "3M STANDARDS", "expr": "(4/3) * end_bay_units"},
