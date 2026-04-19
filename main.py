@@ -1,3 +1,8 @@
+# V19
+# Config B END_BAY_LEG labour recipe fix:
+# - add EPP 1.15 qty 2 to END_BAY_LEG_LABOUR_RECIPES["B"]
+# This should move end_bay_leg labour from ~8397.3 to workbook target ~8819.90.
+#
 # V18
 # END BAY LEG labour rounding fix:
 # - round cost_per_vertical_ft to 2 decimals before height_engine_total()
@@ -397,6 +402,7 @@ END_BAY_LEG_LABOUR_RECIPES = {
         {"name": "SBB 1.15", "qty": 1},
         {"name": "1.15 SL", "qty": 4},
         {"name": "GL", "qty": 1.32},
+        {"name": "EPP 1.15", "qty": 2},
         {"name": 'SL 24"', "qty": 4},
         {"name": 'EPP 24"', "qty": 2},
         {"name": 'sbkts 24"', "qty": 1},
