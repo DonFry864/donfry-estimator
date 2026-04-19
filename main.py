@@ -435,7 +435,7 @@ END_BAY_LEG_RECIPES = {
         {"name": 'sbkts 24"', "expr": "1 * end_bay_units"},
         {"name": 'SL 24"', "expr": "4 * end_bay_units"},
         {"name": 'EPP 24"', "expr": "2 * end_bay_units"},
-        {"name": "MONARFLEX TARP", "expr": "45.5 * end_bay_units * tarp"},
+        {"name": "MONARFLEX TARP", "expr": "height * tarp * end_bay_leg_input"},
     ],
     "C": [
         {"name": "3M STANDARDS", "expr": "(4/3) * end_bay_units"},
