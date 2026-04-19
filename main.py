@@ -1,5 +1,11 @@
-# V12 - Config B end bay tarp logic fixed; Config B end bay labour adds EPP 1.15 only in labour recipe.
-
+# V15 NORMALIZED
+# Shared calculation logic preserved from Config A.
+# Other configs differ by recipes/section presence only.
+# Normalizations applied:
+# - Config B end bay tarp recipe now uses same recipe-based tarp expression as all other configs
+# - Configs H and I now include recipe-based tarp lines in base unit and end bay leg
+# - Config F now participates in shared deck level and deck level end bay logic with its own recipes
+#
 from collections import defaultdict
 from fastapi import FastAPI
 from pydantic import BaseModel
@@ -166,7 +172,7 @@ EQUIPMENT_ORDER = [
 
 
 STANDARD_CONFIGS = {"A", "B", "C", "D", "F", "G", "H", "I"}
-DECK_LEVEL_CONFIGS = {"G", "H", "I"}
+DECK_LEVEL_CONFIGS = {"F", "G", "H", "I"}
 
 
 class Input(BaseModel):
@@ -263,6 +269,7 @@ BASE_UNIT_RECIPES = {
         {"name": "GL", "expr": "1.32 * base_units"},
         {"name": "SBB 1.15", "expr": "0.125 * base_units"},
         {"name": "SL5", "expr": "1 * base_units"},
+        {"name": "MONARFLEX TARP", "expr": "45.5 * base_units * tarp"},
     ],
     "I": [
         {"name": "3M STANDARDS", "expr": "(4/3) * base_units"},
@@ -272,6 +279,7 @@ BASE_UNIT_RECIPES = {
         {"name": "GL", "expr": "1.32 * base_units"},
         {"name": "SBB 1.15", "expr": "0.125 * base_units"},
         {"name": "DL5", "expr": "1 * base_units"},
+        {"name": "MONARFLEX TARP", "expr": "45.5 * base_units * tarp"},
     ],
 }
 
@@ -371,7 +379,6 @@ END_BAY_LEG_LABOUR_RECIPES = {
         {"name": "SBB 1.15", "qty": 1},
         {"name": "1.15 SL", "qty": 4},
         {"name": "GL", "qty": 1.32},
-        {"name": "EPP 1.15", "qty": 2},
         {"name": 'SL 24"', "qty": 4},
         {"name": 'EPP 24"', "qty": 2},
         {"name": 'sbkts 24"', "qty": 1},
@@ -477,17 +484,25 @@ END_BAY_LEG_RECIPES = {
         {"name": "SBB5", "expr": "1 * end_bay_units"},
         {"name": "SL5", "expr": "1 * end_bay_units"},
         {"name": "GL", "expr": "1.32 * end_bay_units"},
+        {"name": "MONARFLEX TARP", "expr": "45.5 * end_bay_units * tarp"},
     ],
     "I": [
         {"name": "3M STANDARDS", "expr": "(4/3) * end_bay_units"},
         {"name": "SBB5", "expr": "1 * end_bay_units"},
         {"name": "DL5", "expr": "1 * end_bay_units"},
         {"name": "GL", "expr": "1.32 * end_bay_units"},
+        {"name": "MONARFLEX TARP", "expr": "45.5 * end_bay_units * tarp"},
     ],
 }
 
 
 DECK_LEVEL_RECIPES = {
+    "F": [
+        {"name": "PFM7", "expr": "2 * deck_level_runs"},
+        {"name": "SL7", "expr": "2 * deck_level_runs"},
+        {"name": "EPP7", "expr": "1 * deck_level_runs"},
+        {"name": "MONARFLEX TARP", "expr": "45.5 * deck_level_runs * tarp"},
+    ],
     "G": [
         {"name": "PFM7", "expr": "3 * deck_level_runs"},
         {"name": "SL7", "expr": "2 * deck_level_runs"},
@@ -513,6 +528,11 @@ DECK_LEVEL_RECIPES = {
 
 
 DECK_LEVEL_END_BAY_RECIPES = {
+    "F": [
+        {"name": "1.15 SL", "expr": "4 * deck_level_end_bay_input"},
+        {"name": "EPP 1.15", "expr": "2 * deck_level_end_bay_input"},
+        {"name": "MONARFLEX TARP", "expr": "45.5 * deck_level_end_bay_input * tarp"},
+    ],
     "G": [
         {"name": "1.15 SL", "expr": "4 * deck_level_end_bay_input"},
         {"name": "EPP 1.15", "expr": "2 * deck_level_end_bay_input"},
@@ -541,6 +561,11 @@ DECK_LEVEL_END_BAY_RECIPES = {
 
 
 DECK_LEVEL_LABOUR_RECIPES = {
+    "F": [
+        {"name": "PFM7", "qty": 2},
+        {"name": "SL7", "qty": 2},
+        {"name": "EPP7", "qty": 1},
+    ],
     "G": [
         {"name": "PFM7", "qty": 3},
         {"name": "SL7", "qty": 2},
@@ -562,6 +587,10 @@ DECK_LEVEL_LABOUR_RECIPES = {
 }
 
 DECK_LEVEL_END_BAY_LABOUR_RECIPES = {
+    "F": [
+        {"name": "1.15 SL", "qty": 4},
+        {"name": "EPP 1.15", "qty": 2},
+    ],
     "G": [
         {"name": "1.15 SL", "qty": 4},
         {"name": "EPP 1.15", "qty": 2},
